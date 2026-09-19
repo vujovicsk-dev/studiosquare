@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Studio Square — štampa fotografija</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>
+/* React loader: tries three CDNs, then boots the runtime. Keeps the app from
+   rendering blank if one CDN is unreachable. No effect on design. */
+(function () {
+  var SETS = [
+    ['https://unpkg.com/react@18.3.1/umd/react.production.min.js',
+     'https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js'],
+    ['https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js',
+     'https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js'],
+    ['https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js',
+     'https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js']
+  ];
+  function load(url) {
+    return new Promise(function (ok, no) {
+      var s = document.createElement('script');
+      s.src = url; s.async = false;
+      s.onload = ok; s.onerror = function () { no(new Error(url)); };
+      document.head.appendChild(s);
+    });
+  }
+  function attempt(i) {
+    if (i >= SETS.length) return Promise.reject(new Error('react unavailable'));
+    return load(SETS[i][0]).then(function () { return load(SETS[i][1]); })
+      .catch(function () { return attempt(i + 1); });
+  }
+  function boot() {
+    var s = document.createElement('script');
+    s.src = './support.js'; s.async = false;
+    document.head.appendChild(s);
+  }
+  attempt(0).then(boot, boot);
+
+  /* Recovery net: if the app has not painted a few seconds after load (stale
+     service-worker cache, half-loaded script on a flaky mobile connection),
+     drop the caches, unregister the worker and reload once. */
+  window.addEventListener('load', function () {
+    setTimeout(function () {
+      var root = document.querySelector('#dc-root, x-dc, #root');
+      var painted = !!window.React && !!root && root.getBoundingClientRect().height > 40
+        && document.body.innerText.trim().length > 0;
+      if (painted) return;
+      try { if (sessionStorage.getItem('ss-recovered') === '1') return; } catch (err) { return; }
+      try { sessionStorage.setItem('ss-recovered', '1'); } catch (err) {}
+      var jobs = [];
+      if (window.caches && caches.keys) {
+        jobs.push(caches.keys().then(function (ks) {
+          return Promise.all(ks.map(function (k) { return caches.delete(k); }));
+        }));
+      }
+      if (navigator.serviceWorker && navigator.serviceWorker.getRegistrations) {
+        jobs.push(navigator.serviceWorker.getRegistrations().then(function (rs) {
+          return Promise.all(rs.map(function (r) { return r.unregister(); }));
+        }));
+      }
+      Promise.all(jobs).catch(function () {}).then(function () {
+        location.replace(location.pathname + '?r=' + Date.now());
+      });
+    }, 7000);
+  });
+})();
+</script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Lora:wght@500;600;700&family=Figtree:wght@400;500;600;700;800;900&display=swap">
+<link rel="stylesheet" href="./ds/organic-3ba02c43-f29f-4d43-a84d-8827018ee00e/styles.css">
+<script src="./ds/organic-3ba02c43-f29f-4d43-a84d-8827018ee00e/ds-bundle.js"></script>
+<link rel="manifest" href="./manifest.webmanifest">
+<meta name="theme-color" content="#48D1CC">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Studio Square - izrada fotografija">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
+<link rel="icon" href="./icon-192.png" type="image/png">
+<script src="./legacy.js"></script>
+<script src="./appwrite.js"></script>
+<script src="./pwa.js"></script>
+<style>
+  :root{
+    --color-bg:#ffffff;
+    --color-surface:#ffffff;
+    --color-accent:#0e9c9c;
+    --color-accent-100:#e6f7f7;
+    --color-accent-200:#c9eded;
+    --color-accent-300:#9fdede;
+    --color-accent-500:#0e9c9c;
+    --color-accent-600:#0b8686;
+    --color-accent-700:#0a6b6b;
+    --color-accent-800:#084f4f;
+    --color-accent-900:#063a3a;
+    --color-accent-2:#0e9c9c;
+    --font-heading:"Lora", Georgia, serif;
+  }
+  b,strong{font-family:"Lora", Georgia, serif}
+  [style*="font-weight:600"],[style*="font-weight: 600"],
+  [style*="font-weight:700"],[style*="font-weight: 700"],
+  [style*="font-weight:800"],[style*="font-weight: 800"],
+  [style*="font-weight:900"],[style*="font-weight: 900"]{font-family:"Lora", Georgia, serif !important}
+  html,body{margin:0;background:#e6f7f7;color:#15262a;-webkit-font-smoothing:antialiased}
+  a{color:#0a6b6b}
+  a:hover{color:#0e9c9c}
+  input[type=file]{display:none}
+  @keyframes ticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+  @media (max-width:520px){
+    .opt-btn{padding:11px 14px !important;font-size:14px !important;border-radius:14px !important}
+    .opt-btn span:first-child{font-size:16px !important}
+    .opt-btn span:last-child{font-size:11px !important}
+    main input,main textarea{padding:11px 15px !important;font-size:15px !important}
+  }
+  @supports not (aspect-ratio: 1 / 1){
+    #logo-frame{height:min(80vw,380px)}
+  }
+  @keyframes promoPulse{0%,100%{border-color:#35bdb8;box-shadow:0 0 0 0 rgba(14,156,156,0)}50%{border-color:#0a6b6b;box-shadow:0 0 0 9px rgba(14,156,156,.22)}}
+  @keyframes ticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+  @media (max-width:520px){
+    #promo-box{padding:20px 16px !important;gap:12px !important}
+    #promo-box span{font-size:13px !important}
+    #promo-box .promo-price{font-size:19px !important}
+    #format-grid{grid-template-columns:repeat(2,minmax(0,1fr)) !important}
+    #pickup-note{font-size:11px !important}
+    footer{padding:32px 16px 24px !important}
+    footer *{text-align:center !important}
+    footer a,footer span,footer p{font-size:14px !important}
+    footer a[href^="tel:"]{font-size:19px !important}
+    footer p{font-size:12px !important}
+  }
+  *:focus-visible{outline:2px solid #0e9c9c;outline-offset:2px}
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:#e6f7f7;font-family:var(--font-body);color:#15262a;padding:0">
+
+  <div id="top-actions" style="position:fixed;top:12px;right:12px;z-index:9997;display:flex;align-items:center;gap:8px">
+    <button type="button" onClick="{{ toggleLang }}" aria-label="Language" style="display:flex;align-items:center;gap:6px;padding:8px 13px;border-radius:999px;background:#fff;border:1px solid #c9eded;box-shadow:0 4px 12px rgba(8,69,74,.14);cursor:pointer;font-family:var(--font-body);font-size:13px;font-weight:700;color:#0a6b6b" style-hover="background:#e6f7f7">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0a6b6b" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="9.2"></circle>
+        <path d="M2.8 12h18.4M12 2.8c2.6 2.6 3.9 6 3.9 9.2s-1.3 6.6-3.9 9.2c-2.6-2.6-3.9-6-3.9-9.2S9.4 5.4 12 2.8Z"></path>
+      </svg>
+      {{ langLabel }}
+    </button>
+
+  </div>
+
+  <header style="display:flex;flex-direction:column;align-items:center;gap:18px;padding:56px 20px 40px;text-align:center;background:#e6f7f7">
+    <div id="logo-frame" style="width:min(80%,380px);aspect-ratio:1 / 1">
+      <img src="./logo.png" alt="Studio Square" style="width:100%;height:100%;object-fit:contain;display:block;">
+    </div>
+  <div style="overflow:hidden;background:#48D1CC;border-top:1px solid #35bdb8;border-bottom:1px solid #35bdb8;padding:7px 0;align-self:stretch;width:auto;min-width:0;margin:4px -20px 2px">
+    <div style="display:flex;width:max-content;animation:ticker 26s linear infinite">
+      <span style="flex:none;padding-right:44px;font-size:15px;font-weight:700;color:#15262a;white-space:nowrap">{{ t.ticker }}</span>
+      <span style="flex:none;padding-right:44px;font-size:15px;font-weight:700;color:#15262a;white-space:nowrap">{{ t.ticker }}</span>
+      <span aria-hidden="true" style="flex:none;padding-right:44px;font-size:15px;font-weight:700;color:#15262a;white-space:nowrap">{{ t.ticker }}</span>
+      <span aria-hidden="true" style="flex:none;padding-right:44px;font-size:15px;font-weight:700;color:#15262a;white-space:nowrap">{{ t.ticker }}</span>
+    </div>
+  </div>
+    <p style="margin:6px 0 0;max-width:520px;font-family:'Caveat',cursive;font-size:22px;font-size:clamp(20px,5.6vw,26px);line-height:1.4;color:#3d5a5e;text-align:center;text-wrap:pretty">{{ t.tagline1a }}<br>{{ t.tagline1b }}<br>{{ t.tagline2a }} <span style="white-space:nowrap">{{ t.tagline2b }}</span></p>
+  </header>
+
+
+  <sc-if value="{{ uploading }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(8,69,74,.55)">
+      <div style="width:min(100%,360px);display:flex;flex-direction:column;align-items:center;gap:14px;padding:30px 24px;border-radius:28px;background:#fff;text-align:center">
+        <span style="font-family:var(--font-heading);font-size:22px;color:#15262a">{{ t.uploadingTitle }}</span>
+        <span style="font-size:15px;color:#3d5a5e">{{ uploadProgress }}</span>
+        <div style="width:100%;height:8px;border-radius:999px;background:#e6f7f7;overflow:hidden">
+          <div style="{{ uploadBarStyle }}"></div>
+        </div>
+        <span style="font-size:13px;color:#6b8589">{{ t.uploadingHint }}</span>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ upErr }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(8,69,74,.55)">
+      <div style="width:min(100%,380px);display:flex;flex-direction:column;align-items:center;gap:14px;padding:30px 24px;border-radius:28px;background:#fff;text-align:center">
+        <span style="font-family:var(--font-heading);font-size:22px;color:#15262a">{{ t.uploadFailTitle }}</span>
+        <p style="margin:0;font-size:15px;line-height:1.6;color:#3d5a5e">{{ t.uploadFailBody }}</p>
+        <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:10px">
+          <button type="button" onClick="{{ retryUpload }}" style="padding:12px 22px;border:0;border-radius:999px;background:#48D1CC;color:#08454a;font-family:var(--font-body);font-size:15px;font-weight:700;cursor:pointer">{{ t.retry }}</button>
+          <a href="tel:+381616644503" style="padding:12px 22px;border:1px solid #d6e8e8;border-radius:999px;color:#3d5a5e;font-size:15px;font-weight:600;text-decoration:none">{{ t.callUs }}</a>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ sent }}" hint-placeholder-val="{{ false }}">
+    <div style="max-width:560px;margin:0 auto;padding:0 20px">
+      <div style="border:1px solid #c9eded;border-radius:24px;padding:40px 28px;text-align:center;background:#f7fdfd">
+        <div style="width:56px;height:56px;border-radius:999px;background:#0e9c9c;color:#fff;display:grid;place-items:center;margin:0 auto 18px;font-size:26px">✓</div>
+        <h2 style="font-family:var(--font-heading);font-size:30px;margin:0 0 24px;color:#0a6b6b">{{ t.thanks }}</h2>
+        <button type="button" onClick="{{ reset }}" style="border:0;cursor:pointer;border-radius:999px;background:#0e9c9c;color:#fff;font-family:var(--font-body);font-size:16px;font-weight:600;padding:14px 26px" style-hover="background:#0b8686">{{ t.newOrder }}</button>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ editing }}" hint-placeholder-val="{{ true }}">
+  <main style="max-width:720px;margin:0 auto;padding:0 20px 8px;display:flex;flex-direction:column;gap:36px">
+
+    <section style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:baseline;gap:10px">
+        <span style="width:26px;height:26px;border-radius:999px;background:#e6f7f7;color:#0a6b6b;display:grid;place-items:center;font-size:14px;font-weight:700;flex:none">1</span>
+        <h2 style="font-family:var(--font-heading);font-size:24px;margin:0;color:#15262a">{{ t.step1 }}</h2>
+      </div>
+
+      <label for="photo-input" style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:36px 20px;border:2px dashed #9fdede;border-radius:24px;background:#f7fdfd;cursor:pointer;text-align:center" style-hover="background:#e6f7f7;border-color:#0e9c9c">
+        <span style="font-size:17px;font-weight:600;color:#0a6b6b">{{ t.addPhotos }}</span>
+        <span style="font-size:14px;color:#5b787c">{{ t.addPhotosSub }}</span>
+      </label>
+      <input id="photo-input" type="file" accept="image/jpeg,image/jpg,image/png,image/heic,image/heif,.jpg,.jpeg,.png,.heic,.heif" multiple="{{ true }}" onChange="{{ onFiles }}">
+
+      <sc-if value="{{ hasUploadError }}" hint-placeholder-val="{{ false }}">
+        <p style="margin:0;padding:12px 16px;border:1px solid #f0c9c9;border-radius:16px;background:#fdf6f6;font-size:14px;line-height:1.5;color:#8a3b3b">{{ uploadError }}</p>
+      </sc-if>
+
+      <sc-if value="{{ hasPhotos }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <sc-for list="{{ photos }}" as="p">
+            <div style="display:flex;flex-wrap:wrap;align-items:center;gap:12px 14px;padding:12px;border:1px solid #e2efef;border-radius:18px;background:#fff">
+              <div role="img" aria-label="{{ p.name }}" style="{{ p.thumbStyle }}"></div>
+              <div style="flex:1 1 140px;min-width:120px">
+                <div style="font-size:15px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ p.name }}</div>
+                <div style="font-size:13px;color:#6b8589">{{ p.size }}</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;flex:none;margin-left:auto">
+                <button type="button" aria-label="{{ t.less }}" onClick="{{ p.dec }}" style="width:44px;height:44px;border-radius:999px;border:1px solid #c9eded;background:#fff;color:#0a6b6b;font-size:20px;cursor:pointer;line-height:1" style-hover="background:#e6f7f7">−</button>
+                <span style="min-width:26px;text-align:center;font-size:16px;font-weight:700">{{ p.qty }}</span>
+                <button type="button" aria-label="{{ t.more }}" onClick="{{ p.inc }}" style="width:44px;height:44px;border-radius:999px;border:1px solid #c9eded;background:#fff;color:#0a6b6b;font-size:20px;cursor:pointer;line-height:1" style-hover="background:#e6f7f7">+</button>
+              </div>
+              <button type="button" aria-label="{{ t.remove }}" onClick="{{ p.remove }}" style="width:44px;height:44px;border-radius:999px;border:0;background:transparent;color:#93a7aa;font-size:20px;cursor:pointer;flex:none" style-hover="color:#0a6b6b;background:#f0f7f7">×</button>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+    </section>
+
+    <section style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:baseline;gap:10px">
+        <span style="width:26px;height:26px;border-radius:999px;background:#e6f7f7;color:#0a6b6b;display:grid;place-items:center;font-size:14px;font-weight:700;flex:none">2</span>
+        <h2 style="font-family:var(--font-heading);font-size:24px;margin:0;color:#15262a">{{ t.step2 }}</h2>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px" id="format-grid">
+        <sc-for list="{{ formatOptions }}" as="f" hint-placeholder-count="4">
+          <button type="button" class="opt-btn" onClick="{{ f.select }}" style="{{ f.style }}">
+            <span style="font-size:18px;font-weight:700">{{ f.label }} cm</span>
+            <span style="font-size:14px;opacity:.75">{{ f.priceLabel }}</span>
+          </button>
+        </sc-for>
+      </div>
+
+      <div style="display:flex">
+        <div id="promo-box" style="width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:30px 22px;border:2px solid #35bdb8;border-radius:28px;background:#48D1CC;text-align:center;animation:promoPulse 1.6s ease-in-out infinite">
+          <span style="font-size:15px;line-height:1.5;font-weight:700;color:#15262a;max-width:340px">{{ promoTitleA }}<br>{{ promoTitleB }}</span>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <span class="promo-price" style="font-family:var(--font-heading);font-size:22px;font-size:clamp(20px,5.6vw,26px);font-weight:700;color:#15262a;white-space:nowrap">9 × 13 cm — 16 RSD</span>
+            <span class="promo-price" style="font-family:var(--font-heading);font-size:22px;font-size:clamp(20px,5.6vw,26px);font-weight:700;color:#15262a;white-space:nowrap">10 × 15 cm — 19 RSD</span>
+            <span class="promo-price" style="font-family:var(--font-heading);font-size:22px;font-size:clamp(20px,5.6vw,26px);font-weight:700;color:#15262a;white-space:nowrap">13 × 18 cm — 33 RSD</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:baseline;gap:10px">
+        <span style="width:26px;height:26px;border-radius:999px;background:#e6f7f7;color:#0a6b6b;display:grid;place-items:center;font-size:14px;font-weight:700;flex:none">3</span>
+        <h2 style="font-family:var(--font-heading);font-size:24px;margin:0;color:#15262a">{{ t.step4 }}</h2>
+      </div>
+
+      <div style="display:flex;gap:10px">
+        <sc-for list="{{ deliveryOptions }}" as="d" hint-placeholder-count="2">
+          <button type="button" class="opt-btn" onClick="{{ d.select }}" style="{{ d.style }}">{{ d.label }}</button>
+        </sc-for>
+      </div>
+      <p id="pickup-note" style="margin:-4px 0 0;font-size:13px;line-height:1.5;color:#6b8589">* {{ t.pickupNote }}</p>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px">
+        <label style="display:flex;flex-direction:column;gap:7px;font-size:14px;font-weight:600;color:#3d5a5e">{{ t.fName }}
+          <input type="text" value="{{ name }}" onChange="{{ onName }}" placeholder="{{ t.phName }}" style="border:1px solid #d6e8e8;border-radius:999px;padding:14px 18px;font-family:var(--font-body);font-size:16px;color:#15262a;background:#fff;font-weight:400">
+        </label>
+        <label style="display:flex;flex-direction:column;gap:7px;font-size:14px;font-weight:600;color:#3d5a5e">{{ t.fPhone }}
+          <input type="tel" inputMode="tel" autoComplete="tel" value="{{ phone }}" onChange="{{ onPhone }}" placeholder="06x xxx xxxx" style="border:1px solid #d6e8e8;border-radius:999px;padding:14px 18px;font-family:var(--font-body);font-size:16px;color:#15262a;background:#fff;font-weight:400">
+        </label>
+      </div>
+
+      <sc-if value="{{ needsAddress }}" hint-placeholder-val="{{ false }}">
+        <label style="display:flex;flex-direction:column;gap:7px;font-size:14px;font-weight:600;color:#3d5a5e">{{ t.fAddress }}
+          <input type="text" value="{{ address }}" onChange="{{ onAddress }}" placeholder="{{ t.phAddress }}" style="border:1px solid #d6e8e8;border-radius:999px;padding:14px 18px;font-family:var(--font-body);font-size:16px;color:#15262a;background:#fff;font-weight:400">
+        </label>
+      </sc-if>
+
+      <label style="display:flex;flex-direction:column;gap:7px;font-size:14px;font-weight:600;color:#3d5a5e">{{ t.fNote }}
+        <textarea rows="3" value="{{ note }}" onChange="{{ onNote }}" placeholder="{{ t.phNote }}" style="border:1px solid #d6e8e8;border-radius:18px;padding:14px 18px;font-family:var(--font-body);font-size:16px;color:#15262a;background:#fff;font-weight:400;resize:vertical"></textarea>
+      </label>
+    </section>
+
+    <section style="border:1px solid #c9eded;border-radius:24px;background:#f7fdfd;padding:22px;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;justify-content:space-between;gap:12px;font-size:15px;color:#3d5a5e">
+        <span>{{ copiesLabel }} · {{ formatLabel }} cm · {{ unitLabel }}</span>
+        <span style="font-weight:600;color:#15262a;white-space:nowrap">{{ printsTotal }}</span>
+      </div>
+      <sc-if value="{{ bulkActive }}" hint-placeholder-val="{{ false }}">
+        <p style="margin:-10px 0 0;font-size:13px;line-height:1.5;color:#6b8589">* {{ t.bulkBadge }}</p>
+      </sc-if>
+      <sc-if value="{{ needsAddress }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;justify-content:space-between;gap:12px;font-size:15px;color:#3d5a5e">
+          <span>{{ t.delivery }}</span>
+          <span style="font-weight:600;color:#15262a;white-space:nowrap">{{ deliveryFeeLabel }}</span>
+        </div>
+      </sc-if>
+      <div style="height:1px;background:#d6ecec"></div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px">
+        <span style="font-family:var(--font-heading);font-size:20px;color:#15262a">{{ t.total }}</span>
+        <span style="font-family:var(--font-heading);font-size:30px;color:#0a6b6b;white-space:nowrap">{{ total }}</span>
+      </div>
+      <p style="margin:0;font-size:13px;line-height:1.5;color:#6b8589;text-align:center">{{ t.leadTime }}</p>
+      <button type="button" onClick="{{ submit }}" disabled="{{ cannotSubmit }}" style="{{ submitStyle }}">{{ t.submit }}</button>
+    </section>
+
+  </main>
+  </sc-if>
+
+  <footer style="margin-top:56px;background:#48D1CC;color:#08454a;padding:40px 20px 28px;text-align:center">
+    <div style="max-width:640px;margin:0 auto;display:flex;flex-direction:column;align-items:center;gap:22px">
+      <span style="font-family:var(--font-heading);font-size:22px;color:#15262a">Studio Square</span>
+
+      <a href="https://maps.app.goo.gl/ea18tGNgyPjmbiZR7" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;justify-content:center;gap:9px;color:#15262a;font-size:16px;font-weight:400;line-height:1.5;text-decoration:none" style-hover="text-decoration:underline">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none" aria-hidden="true">
+          <path d="M12 21.5s7-6.2 7-11.1A7 7 0 0 0 5 10.4c0 4.9 7 11.1 7 11.1Z"></path>
+          <circle cx="12" cy="10" r="2.6"></circle>
+        </svg>
+        Bulevar Slobodana Jovanovica 3a, Novi Sad
+      </a>
+
+      <a href="https://maps.app.goo.gl/ea18tGNgyPjmbiZR7" target="_blank" rel="noopener" aria-label="Otvori mapu" style="display:block;width:100%;border-radius:20px;overflow:hidden;background:#e6f7f7;height:220px;box-shadow:0 8px 20px rgba(8,69,74,.18)">
+        <iframe title="Mapa — Studio Square, Bulevar Slobodana Jovanovića, Novi Sad" src="https://maps.google.com/maps?q=Studio%20Square%2C%20Bulevar%20Slobodana%20Jovanovi%C4%87a%2C%20Novi%20Sad&z=17&output=embed" loading="lazy" scrolling="no" style="width:100%;height:100%;border:0;display:block;pointer-events:none"></iframe>
+      </a>
+
+      <span style="font-size:16px;line-height:1.6;color:#15262a;font-weight:400">Radno vreme<br>Ponedeljak - Petak 09-20h<br>Subota 09-14h</span>
+
+      <a href="tel:+381616644503" style="display:inline-flex;align-items:center;justify-content:center;gap:10px;color:#15262a;font-family:var(--font-heading);font-size:22px;text-decoration:none" style-hover="text-decoration:underline">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none" aria-hidden="true">
+          <path d="M6.6 3h-.3A3.3 3.3 0 0 0 3 6.3c0 8 6.7 14.7 14.7 14.7a3.3 3.3 0 0 0 3.3-3.3v-.3l-4.3-1.7-2 2a13.6 13.6 0 0 1-5.4-5.4l2-2L6.6 3Z"></path>
+        </svg>
+        +381 61 66 44 503
+      </a>
+
+      <a href="https://www.instagram.com/studiosquare.ns/" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;justify-content:center;gap:9px;color:#15262a;font-size:16px;font-weight:400;text-decoration:none" style-hover="text-decoration:underline">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none" aria-hidden="true">
+          <rect x="2.5" y="2.5" width="19" height="19" rx="5.5"></rect>
+          <circle cx="12" cy="12" r="4.2"></circle>
+          <circle cx="17.4" cy="6.6" r="1.05" fill="currentColor" stroke="none"></circle>
+        </svg>
+        studiosquare.ns
+      </a>
+
+      <p style="margin:0;font-size:13px;color:#15262a;opacity:.7">© 2026 Studio Square. {{ t.rights }}</p>
+    </div>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{}">
+const ORDER_EMAIL = "mkndjv@gmail.com";
+
+/* bulk: unit price from 100 copies up; formats without a bulk price keep theirs */
+const BULK_FROM = 100;
+const FORMATS = [
+  { id: "9x13", label: "9 × 13", price: 30, bulk: 16 },
+  { id: "10x15", label: "10 × 15", price: 45, bulk: 19 },
+  { id: "13x18", label: "13 × 18", price: 60, bulk: 33 },
+  { id: "15x21", label: "15 × 21", price: 90 },
+  { id: "20x30", label: "20 × 30", price: 250 },
+  { id: "30x40", label: "30 × 40", price: 500 }
+];
+const DELIVERY = [{ id: "radnja", fee: 0 }, { id: "dostava", fee: 550 }];
+
+const STR = {
+  sr: {
+    cart: "Korpa", tagline1a: "Najlepše uspomene zaslužuju da budu", tagline1b: "više od fotografije na ekranu.",
+    tagline2a: "Sačuvajte svoje trenutke zauvek", tagline2b: "uz Studio Square.",
+    thanks: "Hvala na porudžbini", newOrder: "Nova porudžbina",
+    step1: "Izaberite fotografije", step2: "Izaberite format", step3: "Izaberite papir", step4: "Vaši podaci",
+    addPhotos: "Dodajte fotografije", addPhotosSub: "Možete izabrati više slika odjednom",
+    less: "Manje kopija", more: "Više kopija", remove: "Ukloni sliku",
+    gloss: "Lustra", matte: "Mat", glossPaper: "lustra papir", mattePaper: "mat papir",
+    pickup: "Preuzimam u radnji", ship: "Dostava na adresu",
+    fName: "Ime i prezime", phName: "Marija Petrović", fPhone: "Telefon",
+    fAddress: "Adresa za dostavu", phAddress: "Ulica i broj, grad, poštanski broj",
+    fNote: "Napomena", phNote: "",
+    srcDevice: "Računar ili telefon", close: "Zatvori", pickSource: "Odakle dodajete fotografije?", leadTime: "Rok izrade je 1 dan", uploadingTitle: "Šaljemo fotografije", uploadingHint: "Ne zatvarajte stranicu dok se slanje ne završi.", uploadFailTitle: "Slanje nije uspelo", uploadFailBody: "Fotografije nisu sačuvane. Pokušajte ponovo ili nas pozovite — porudžbinu primamo i telefonom.", retry: "Pokušaj ponovo", callUs: "Pozovite nas", promoTitle: "Za porudžbine od 100 ili više fotografija|važe snižene cene:", bulkBadge: "Akcijska cena za 100+ fotografija je primenjena", ticker: "AKCIJA • Poruči 100+ fotografija i ostvari popust •",
+    socialHelp: "Otvorite naš profil, sačuvajte željene fotografije na svoj telefon ili računar, a zatim ih dodajte preko opcije „Računar ili telefon“.",
+    socialOpenIg: "Otvori Instagram", socialOpenFb: "Otvori Facebook",
+    pickupNote: "Za Novi Sad i okolinu do 40 km — porudžbinu možete preuzeti lično.",
+    unitPrice: "Cena po komadu", delivery: "Dostava", total: "Ukupno", submit: "Pošalji porudžbinu",
+    hintReady: "Plaćanje pri preuzimanju. Rok izrade 1 radni dan.",
+    hintMore: "Dodajte slike i unesite ime i telefon da nastavite.",
+    biggerMap: "Prikaži veću mapu", hours: "Radno vreme", hoursValue: "Ponedeljak – Subota · 09:00 – 20:00",
+    rights: "Sva prava zadržana.", pcs: "kom", each: "/ kom"
+  },
+  en: {
+    cart: "Cart", tagline1a: "The best memories deserve more", tagline1b: "than a photo on a screen.",
+    tagline2a: "Keep your moments forever", tagline2b: "with Studio Square.",
+    thanks: "Thank you for your order", newOrder: "New order",
+    step1: "Choose your photos", step2: "Choose a format", step3: "Choose paper", step4: "Your details",
+    addPhotos: "Add photos", addPhotosSub: "You can select several photos at once",
+    less: "Fewer copies", more: "More copies", remove: "Remove photo",
+    gloss: "Lustre", matte: "Matte", glossPaper: "lustre paper", mattePaper: "matte paper",
+    pickup: "Pick up in store", ship: "Delivery to address",
+    fName: "Full name", phName: "Maria Petrovic", fPhone: "Phone",
+    fAddress: "Delivery address", phAddress: "Street and number, city, postal code",
+    fNote: "Note", phNote: "",
+    srcDevice: "Computer or phone", close: "Close", pickSource: "Where are the photos from?", leadTime: "Ready in 1 day", uploadingTitle: "Uploading photos", uploadingHint: "Please keep this page open until the upload finishes.", uploadFailTitle: "Upload failed", uploadFailBody: "Your photos were not saved. Please try again or call us — we take orders by phone too.", retry: "Try again", callUs: "Call us", promoTitle: "Orders of 100 photos or more|get reduced prices:", bulkBadge: "Bulk price for 100+ photos applied", ticker: "SALE • Order 100+ photos and get a discount •",
+    socialHelp: "Open our profile, save the photos you want to your phone or computer, then add them with the “Computer or phone” option.",
+    socialOpenIg: "Open Instagram", socialOpenFb: "Open Facebook",
+    pickupNote: "For Novi Sad and up to 40 km around — you can collect your order in person.",
+    unitPrice: "Price per print", delivery: "Delivery", total: "Total", submit: "Place order",
+    hintReady: "Payment on collection. Ready in 1 working day.",
+    hintMore: "Add photos and enter your name and phone to continue.",
+    biggerMap: "Show larger map", hours: "Opening hours", hoursValue: "Monday – Saturday · 09:00 – 20:00",
+    rights: "All rights reserved.", pcs: "pcs", each: "each"
+  }
+};
+
+class Component extends DCLogic {
+  state = {
+    photos: [], format: "10x15", delivery: "radnja",
+    name: "", phone: "", address: "", note: "", sent: null, lang: "sr", uploadError: "", uploading: null, upErr: ""
+  };
+
+  dinars(n) { return n.toLocaleString("sr-RS") + " RSD"; }
+
+  pill(active, extra) {
+    return [
+      "display:flex;flex-direction:column;align-items:flex-start;gap:2px;cursor:pointer;font-family:var(--font-body);text-align:left",
+      "padding:14px 18px;border-radius:18px;font-size:16px;font-weight:600;transition:background .15s,border-color .15s",
+      active
+        ? "border:2px solid #48D1CC;background:#48D1CC;color:#08454a"
+        : "border:2px solid #e2efef;background:#fff;color:#3d5a5e",
+      extra || ""
+    ].join(";");
+  }
+
+  /* Everything downstream works with JPEG only. JPG/JPEG passes through
+     untouched; PNG and HEIC/HEIF are decoded and re-encoded locally at full
+     resolution, quality 0.95. A file that cannot be decoded is rejected. */
+  isJpeg(file) {
+    return /^image\/jpe?g$/i.test(file.type) || /\.jpe?g$/i.test(file.name);
+  }
+
+  jpegName(name) {
+    return name.replace(/\.[^.]+$/, "") + ".jpg";
+  }
+
+  async decode(file) {
+    if (window.createImageBitmap) {
+      try { return await createImageBitmap(file); } catch (err) { /* fall through */ }
+    }
+    const url = URL.createObjectURL(file);
+    try {
+      return await new Promise((ok, no) => {
+        const im = new Image();
+        im.onload = () => ok(im);
+        im.onerror = () => no(new Error("decode"));
+        im.src = url;
+      });
+    } finally {
+      setTimeout(() => URL.revokeObjectURL(url), 30000);
+    }
+  }
+
+  async toJpeg(file) {
+    const bmp = await this.decode(file);
+    const w = bmp.width || bmp.naturalWidth;
+    const h = bmp.height || bmp.naturalHeight;
+    if (!w || !h) throw new Error("empty");
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#fff";           // flatten PNG transparency
+    ctx.fillRect(0, 0, w, h);
+    ctx.drawImage(bmp, 0, 0, w, h);
+    if (bmp.close) bmp.close();
+    const blob = await new Promise((ok) => {
+      if (canvas.toBlob) { canvas.toBlob(ok, "image/jpeg", 0.95); return; }
+      try {
+        const parts = canvas.toDataURL("image/jpeg", 0.95).split(",");
+        const bin = atob(parts[1]);
+        const bytes = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        ok(new Blob([bytes], { type: "image/jpeg" }));
+      } catch (err) { ok(null); }
+    });
+    if (!blob) throw new Error("encode");
+    return new File([blob], this.jpegName(file.name), { type: "image/jpeg" });
+  }
+
+  addFiles = async (e) => {
+    const files = Array.from(e.target.files || []);
+    e.target.value = "";
+    if (!files.length) return;
+
+    const accepted = [];
+    const failed = [];
+    for (let i = 0; i < files.length; i++) {
+      const f = files[i];
+      let jpg = null;
+      if (this.isJpeg(f)) jpg = f;
+      else {
+        try { jpg = await this.toJpeg(f); } catch (err) { failed.push(f.name); }
+      }
+      if (!jpg) continue;
+      accepted.push({
+        key: Date.now() + "-" + i,
+        name: jpg.name,
+        size: (jpg.size / 1048576).toFixed(1) + " MB",
+        url: URL.createObjectURL(jpg),
+        file: jpg,
+        qty: 1
+      });
+    }
+
+    this.setState(s => ({
+      photos: s.photos.concat(accepted),
+      uploadError: failed.length
+        ? (s.lang === "en"
+            ? "Could not convert to JPG: " + failed.join(", ") + ". Please save the photo as JPG and try again."
+            : "Nije moguće konvertovati u JPG: " + failed.join(", ") + ". Sačuvajte fotografiju kao JPG i pokušajte ponovo.")
+        : ""
+    }));
+  };
+
+  bump(key, d) {
+    this.setState(s => ({
+      photos: s.photos.map(p => p.key === key ? Object.assign({}, p, { qty: Math.max(1, p.qty + d) }) : p)
+    }));
+  }
+
+  /* Sends order + photos to Supabase. Retries reuse the same order id and
+     payload, so a retry never fires a second email or a second orders row. */
+  runUpload(id, order, photos) {
+    this.pending = { id: id, order: order, photos: photos };
+    const guard = e => { e.preventDefault(); e.returnValue = ""; };
+    window.addEventListener("beforeunload", guard);
+    this.setState({ uploading: { done: 0, total: photos.length }, upErr: "" });
+
+    window.SS_APPWRITE.submitOrder(order, photos, (done, tot) => this.setState({ uploading: { done: done, total: tot } }))
+      .then(() => {
+        window.removeEventListener("beforeunload", guard);
+        this.pending = null;
+        this.setState({ uploading: null, sent: { id: id } });
+      })
+      .catch(err => {
+        console.error("Appwrite:", err);
+        window.removeEventListener("beforeunload", guard);
+        this.setState({ uploading: null, upErr: String(err && err.message || err) });
+      });
+  }
+
+  renderVals() {
+    const s = this.state;
+    const t = STR[s.lang] || STR.sr;
+    const fmt = FORMATS.find(f => f.id === s.format) || FORMATS[0];
+    const del = DELIVERY.find(d => d.id === s.delivery) || DELIVERY[0];
+    const copies = s.photos.reduce((a, p) => a + p.qty, 0);
+    const bulk = copies >= BULK_FROM && fmt.bulk;
+    const unit = bulk ? fmt.bulk : fmt.price;
+    const prints = copies * unit;
+    const total = prints + del.fee;
+    const needsAddress = s.delivery === "dostava";
+    const ready = s.photos.length > 0 && s.name.trim() && s.phone.trim() && (!needsAddress || s.address.trim());
+    const delLabel = del.id === "dostava" ? t.ship : t.pickup;
+
+    return {
+      t,
+      langLabel: s.lang === "sr" ? "EN" : "SR",
+      toggleLang: () => this.setState({ lang: s.lang === "sr" ? "en" : "sr" }),
+
+      editing: !s.sent,
+      sent: !!s.sent,
+      reset: () => this.setState({ photos: [], name: "", phone: "", address: "", note: "", sent: null }),
+
+      cartCount: copies,
+      uploading: !!s.uploading,
+      uploadProgress: s.uploading ? s.uploading.done + " / " + s.uploading.total : "",
+      uploadBarStyle: "height:100%;border-radius:999px;background:#48D1CC;transition:width .2s;width:" +
+        (s.uploading && s.uploading.total ? Math.round(s.uploading.done / s.uploading.total * 100) : 0) + "%",
+      upErr: !!s.upErr,
+      retryUpload: () => { const p = this.pending; if (p) this.runUpload(p.id, p.order, p.photos); else this.setState({ upErr: "" }); },
+      bulkActive: !!bulk,
+      promoTitleA: t.promoTitle.split("|")[0],
+      promoTitleB: t.promoTitle.split("|")[1],
+      uploadError: s.uploadError,
+      hasUploadError: !!s.uploadError,
+      onFiles: this.addFiles,
+      hasPhotos: s.photos.length > 0,
+      photos: s.photos.map(p => ({
+        key: p.key, name: p.name, size: p.size, url: p.url, qty: p.qty,
+        thumbStyle: "width:58px;height:58px;border-radius:12px;background:#e6f7f7 center/cover no-repeat url('" + p.url + "');flex:none",
+        inc: () => this.bump(p.key, 1),
+        dec: () => this.bump(p.key, -1),
+        remove: () => this.setState(st => ({ photos: st.photos.filter(x => x.key !== p.key) }))
+      })),
+
+      formatOptions: FORMATS.map(f => ({
+        label: f.label,
+        priceLabel: this.dinars(copies >= BULK_FROM && f.bulk ? f.bulk : f.price) + " " + t.each,
+        style: this.pill(f.id === s.format),
+        select: () => this.setState({ format: f.id })
+      })),
+      deliveryOptions: [
+        { id: "radnja", label: t.pickup }, { id: "dostava", label: t.ship }
+      ].map(d => ({
+        label: d.label,
+        style: this.pill(d.id === s.delivery, "flex:1;align-items:center;text-align:center;border-radius:999px;font-size:15px"),
+        select: () => this.setState({ delivery: d.id })
+      })),
+
+      name: s.name, phone: s.phone, address: s.address, note: s.note,
+      onName: e => this.setState({ name: e.target.value }),
+      onPhone: e => this.setState({ phone: e.target.value }),
+      onAddress: e => this.setState({ address: e.target.value }),
+      onNote: e => this.setState({ note: e.target.value }),
+      needsAddress,
+
+      formatLabel: fmt.label,
+      copiesLabel: copies + " " + t.pcs,
+      unitLabel: this.dinars(unit) + " " + t.each,
+      printsTotal: this.dinars(prints),
+      deliveryFeeLabel: this.dinars(del.fee),
+      total: this.dinars(total),
+
+      cannotSubmit: !ready,
+      submitStyle: [
+        "border:0;border-radius:999px;padding:17px 24px;font-family:var(--font-body);font-size:17px;font-weight:700;width:100%",
+        ready ? "background:#48D1CC;color:#08454a;cursor:pointer;box-shadow:0 8px 22px rgba(72,209,204,.4)"
+              : "background:#dbeaea;color:#8ba3a6;cursor:not-allowed"
+      ].join(";"),
+      hint: ready ? t.hintReady : t.hintMore,
+
+      submit: () => {
+        if (!ready) return;
+        const id = "SQ-" + String(Math.floor(1000 + Math.random() * 9000));
+        const lines = [
+          "Porudžbina " + id, "",
+          "Ime: " + s.name.trim(),
+          "Telefon: " + s.phone.trim(),
+          "Preuzimanje: " + delLabel,
+          needsAddress ? "Adresa: " + s.address.trim() : null,
+          "Format: " + fmt.label + " cm",
+          "Cena po komadu: " + this.dinars(unit) + (bulk ? " (akcijska cena od " + BULK_FROM + " kom)" : ""), "",
+          "Fotografije:",
+          ...s.photos.map(p => "· " + p.name + " — " + p.qty + " kom"),
+          "",
+          "Ukupno: " + this.dinars(total),
+          s.note.trim() ? "Napomena: " + s.note.trim() : null
+        ].filter(Boolean);
+        fetch("https://formsubmit.co/ajax/" + ORDER_EMAIL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify({
+            _subject: "Porudžbina " + id + " — Studio Square",
+            _template: "table",
+            _captcha: "false",
+            Porudzbina: id,
+            Ime: s.name.trim(),
+            Telefon: s.phone.trim(),
+            Preuzimanje: delLabel,
+            Adresa: needsAddress ? s.address.trim() : "—",
+            Format: fmt.label + " cm",
+            CenaPoKomadu: this.dinars(unit) + (bulk ? " (akcija 100+)" : ""),
+            Fotografije: s.photos.map(p => p.name + " — " + p.qty + " kom").join("\n"),
+            Ukupno: this.dinars(total),
+            Napomena: s.note.trim() || "—",
+            Detalji: lines.join("\n")
+          })
+        }).catch(() => {});
+
+        /* Supabase: order row -> photos/<order_id>/ -> order_photos rows.
+           Runs after the email so a storage problem never loses the order. */
+        if (!window.SS_APPWRITE) { this.setState({ sent: { id: id } }); return; }
+
+        this.runUpload(id, {
+          full_name: s.name.trim(),
+          phone: s.phone.trim(),
+          address: needsAddress ? s.address.trim() : "",
+          note: s.note.trim(),
+          photo_format: fmt.label + " cm",
+          photo_quantity: copies,
+          total_price: total,
+          photo_count: s.photos.length
+        }, s.photos);
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>
