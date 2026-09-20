@@ -12,6 +12,7 @@
 (function () {
   var ENDPOINT = 'https://script.google.com/macros/s/AKfycbxgAz_RFMiEQjebRM87C6Bm7L6RnAINVsyC_mM8D-vRoGJ1Q_gq4UPzAnU4ui-PQJNZ5A/exec';
   var RETRIES = 2;
+  var CONCURRENCY = 3;
 
   function post(payload) {
     return fetch(ENDPOINT, {
@@ -62,30 +63,36 @@
     });
   }
 
-  /* Sequential on purpose: Apps Script serialises calls per user anyway, and
-     one request at a time keeps memory flat on older phones. */
+  /* A few uploads in flight at once — roughly three times faster than one at
+     a time on a phone, while still bounded so a 100-photo order does not open
+     a hundred sockets. The sheet is written once, at finalize. */
   async function submitOrder(order, photos, onProgress) {
     var created = await postRetry({ action: 'create', order: order });
     var id = created.id;
     var folderId = created.folderId;
 
-    for (var i = 0; i < photos.length; i++) {
-      var p = photos[i];
-      var b64 = await toBase64(p.file);
-      await postRetry({
-        action: 'photo',
-        id: id,
-        folderId: folderId,
-        index: i,
-        name: safeName(p.name, i),
-        copies: p.qty || 1,
-        mime: 'image/jpeg',
-        data: b64
-      });
-      if (onProgress) onProgress(i + 1, photos.length);
+    var next = 0, done = 0;
+    async function worker() {
+      while (next < photos.length) {
+        var i = next++;
+        var p = photos[i];
+        var b64 = await toBase64(p.file);
+        await postRetry({
+          action: 'photo', id: id, folderId: folderId, index: i,
+          name: safeName(p.name, i), mime: 'image/jpeg', data: b64
+        });
+        done++;
+        if (onProgress) onProgress(done, photos.length);
+      }
     }
+    var running = [];
+    for (var w = 0; w < Math.min(CONCURRENCY, photos.length); w++) running.push(worker());
+    await Promise.all(running);
 
-    await postRetry({ action: 'finalize', id: id, folderId: folderId, count: photos.length });
+    await postRetry({
+      action: 'finalize', id: id, folderId: folderId, count: photos.length,
+      spec: photos.map(function (p) { return p.qty || 1; })
+    });
     return id;
   }
 

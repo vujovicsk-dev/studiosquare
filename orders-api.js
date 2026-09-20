@@ -69,6 +69,9 @@
     try { sessionStorage.setItem(KEY, data.token); }
     catch (e) { throw new Error('Pregledač blokira sessionStorage — isključite privatni režim ili blokadu kolačića.'); }
     if (!token()) throw new Error('Token nije sačuvan u pregledaču.');
+    /* The login reply already carries the first page of orders, so the admin
+       opens on one round trip instead of two. */
+    if (data.orders) preloaded = data.orders;
     console.info('SS_ORDERS: prijava uspešna, token dužine', data.token.length);
     return true;
   }
@@ -77,7 +80,10 @@
     try { sessionStorage.removeItem(KEY); } catch (e) {}
   }
 
+  var preloaded = null;
+
   async function list() {
+    if (preloaded) { var first = preloaded; preloaded = null; return first; }
     var data = await get({ action: 'list' });
     return data.orders || [];
   }

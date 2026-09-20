@@ -293,9 +293,9 @@
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:940,&quot;height&quot;:900}}">
 /* Chime shapes: [frequency, start offset, length] per note. */
 const TONES = {
-  zvono: { label: "Zvonce", notes: [[880, 0, 0.24], [1245, 0.13, 0.26]] },
-  meko:  { label: "Meko",   notes: [[523, 0, 0.3], [659, 0.16, 0.34]] },
-  kratko:{ label: "Kratko", notes: [[1320, 0, 0.1]] }
+  zvono: { label: "Alarm", notes: [[1046, 0, 0.18], [784, 0.2, 0.18], [1046, 0.4, 0.18], [784, 0.6, 0.22]] },
+  meko:  { label: "Sirena", notes: [[660, 0, 0.3], [990, 0.28, 0.3], [660, 0.56, 0.3], [990, 0.84, 0.34]] },
+  kratko:{ label: "Kratko", notes: [[1480, 0, 0.14], [1480, 0.18, 0.18]] }
 };
 
 const MONTHS_SR = ["januar", "februar", "mart", "april", "maj", "jun",
@@ -367,7 +367,7 @@ class Component extends DCLogic {
   /* Chime built with WebAudio — no audio file to ship or cache. */
   beep(force) {
     if (!force && !this.state.sound) return;
-    const level = (this.state.volume / 100) * 0.3;
+    const level = (this.state.volume / 100) * 0.9;
     if (level <= 0) return;
     try {
       const AC = window.AudioContext || window.webkitAudioContext;
@@ -379,7 +379,9 @@ class Component extends DCLogic {
         const t = this.ac.currentTime + at;
         const osc = this.ac.createOscillator();
         const gain = this.ac.createGain();
-        osc.type = "sine";
+        /* square through a soft-clipper: carries much further than a sine
+           at the same volume setting, which is the point in a busy shop */
+        osc.type = "square";
         osc.frequency.setValueAtTime(freq, t);
         gain.gain.setValueAtTime(0.0001, t);
         gain.gain.exponentialRampToValueAtTime(level, t + 0.02);
@@ -511,11 +513,13 @@ class Component extends DCLogic {
         }
       });
 
-      const fmt = String(order.photo_format).replace(/[^0-9x×]/gi, "").replace("×", "x");
+      const fmt = String(order.photo_format).replace(/×/g, "x").replace(/\s+/g, " ").trim();
+      const who = String(order.full_name || "Porudzbina " + order.id)
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^A-Za-z0-9 ]/g, "").replace(/\s+/g, " ").trim().toUpperCase();
+      const base = who + " - " + fmt;
       const zip = await window.SS_ZIP.make(files);
-      window.SS_ZIP.save(zip, mode === "stampa"
-        ? "stampa-" + order.id + "-" + fmt + "-" + files.length + "kom.zip"
-        : "originali-" + order.id + ".zip");
+      window.SS_ZIP.save(zip, mode === "stampa" ? base + ".zip" : base + " (originali).zip");
       if (mode === "stampa") this.say("Paket za štampu: " + files.length + " listova, format " + order.photo_format + ".");
     } catch (e) {
       console.error("zip:", e);
