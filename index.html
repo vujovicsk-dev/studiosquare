@@ -84,7 +84,7 @@
 <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
 <link rel="icon" href="./icon-192.png" type="image/png">
 <script src="./legacy.js"></script>
-<script src="./appwrite.js"></script>
+<script src="./gas.js"></script>
 <script src="./pwa.js"></script>
 <style>
   :root{
@@ -186,6 +186,7 @@
       <div style="width:min(100%,380px);display:flex;flex-direction:column;align-items:center;gap:14px;padding:30px 24px;border-radius:28px;background:#fff;text-align:center">
         <span style="font-family:var(--font-heading);font-size:22px;color:#15262a">{{ t.uploadFailTitle }}</span>
         <p style="margin:0;font-size:15px;line-height:1.6;color:#3d5a5e">{{ t.uploadFailBody }}</p>
+        <p style="margin:0;font-size:12px;line-height:1.5;color:#8aa2a6;word-break:break-word">{{ upErrText }}</p>
         <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:10px">
           <button type="button" onClick="{{ retryUpload }}" style="padding:12px 22px;border:0;border-radius:999px;background:#48D1CC;color:#08454a;font-family:var(--font-body);font-size:15px;font-weight:700;cursor:pointer">{{ t.retry }}</button>
           <a href="tel:+381616644503" style="padding:12px 22px;border:1px solid #d6e8e8;border-radius:999px;color:#3d5a5e;font-size:15px;font-weight:600;text-decoration:none">{{ t.callUs }}</a>
@@ -546,7 +547,7 @@ class Component extends DCLogic {
     }));
   }
 
-  /* Sends order + photos to Supabase. Retries reuse the same order id and
+  /* Sends order + photos to the Apps Script backend. Retries reuse the same order id and
      payload, so a retry never fires a second email or a second orders row. */
   runUpload(id, order, photos) {
     this.pending = { id: id, order: order, photos: photos };
@@ -554,14 +555,14 @@ class Component extends DCLogic {
     window.addEventListener("beforeunload", guard);
     this.setState({ uploading: { done: 0, total: photos.length }, upErr: "" });
 
-    window.SS_APPWRITE.submitOrder(order, photos, (done, tot) => this.setState({ uploading: { done: done, total: tot } }))
+    window.SS_BACKEND.submitOrder(order, photos, (done, tot) => this.setState({ uploading: { done: done, total: tot } }))
       .then(() => {
         window.removeEventListener("beforeunload", guard);
         this.pending = null;
         this.setState({ uploading: null, sent: { id: id } });
       })
       .catch(err => {
-        console.error("Appwrite:", err);
+        console.error("backend:", err);
         window.removeEventListener("beforeunload", guard);
         this.setState({ uploading: null, upErr: String(err && err.message || err) });
       });
@@ -596,6 +597,7 @@ class Component extends DCLogic {
       uploadBarStyle: "height:100%;border-radius:999px;background:#48D1CC;transition:width .2s;width:" +
         (s.uploading && s.uploading.total ? Math.round(s.uploading.done / s.uploading.total * 100) : 0) + "%",
       upErr: !!s.upErr,
+      upErrText: s.upErr,
       retryUpload: () => { const p = this.pending; if (p) this.runUpload(p.id, p.order, p.photos); else this.setState({ upErr: "" }); },
       bulkActive: !!bulk,
       promoTitleA: t.promoTitle.split("|")[0],
@@ -686,9 +688,9 @@ class Component extends DCLogic {
           })
         }).catch(() => {});
 
-        /* Supabase: order row -> photos/<order_id>/ -> order_photos rows.
+        /* Google Apps Script: Sheets row -> private Drive folder per order.
            Runs after the email so a storage problem never loses the order. */
-        if (!window.SS_APPWRITE) { this.setState({ sent: { id: id } }); return; }
+        if (!window.SS_BACKEND) { this.setState({ sent: { id: id } }); return; }
 
         this.runUpload(id, {
           full_name: s.name.trim(),
