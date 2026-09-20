@@ -64,7 +64,22 @@
 <script src="./orders-api.js"></script>
 </helmet>
 
-<div id="admin-wrap" style="min-height:100vh;max-width:940px;margin:0 auto;padding:32px 20px 60px;display:flex;flex-direction:column;gap:20px">
+<sc-if value="{{ locked }}" hint-placeholder-val="{{ true }}">
+  <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px">
+    <form onSubmit="{{ onLogin }}" style="width:min(100%,380px);display:flex;flex-direction:column;gap:14px;padding:28px 24px;border-radius:28px;background:#fff;border:1px solid #c9eded">
+      <h1 style="margin:0;font-family:var(--font-heading);font-size:26px;font-weight:700">Studio Square — admin</h1>
+      <span style="font-size:14px;color:#6b8589">Unesite lozinku za pristup porudžbinama.</span>
+      <input type="password" value="{{ pw }}" onChange="{{ onPw }}" placeholder="Lozinka" autoComplete="current-password" style="padding:13px 16px;border:1px solid #d6e8e8;border-radius:999px;font-family:var(--font-body);font-size:15px;outline:none" style-focus="border-color:#48D1CC">
+      <sc-if value="{{ loginErr }}" hint-placeholder-val="{{ false }}">
+        <span style="font-size:13px;color:#b23b3b">{{ loginErr }}</span>
+      </sc-if>
+      <button type="submit" disabled="{{ loggingIn }}" style="padding:13px 18px;border:0;border-radius:999px;background:#48D1CC;color:#08454a;font-family:var(--font-body);font-size:15px;font-weight:700;cursor:pointer">{{ loginLabel }}</button>
+    </form>
+  </div>
+</sc-if>
+
+<sc-if value="{{ unlocked }}" hint-placeholder-val="{{ false }}">
+<div id="admin-wrap" style="{{ wrapStyle }}">
 
   <header style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px">
     <div style="display:flex;flex-direction:column;gap:4px">
@@ -75,7 +90,7 @@
       <button type="button" onClick="{{ toggleSound }}" style="{{ soundStyle }}">{{ soundLabel }}</button>
       <button type="button" onClick="{{ toggleSettings }}" style="padding:11px 18px;border:1px solid #d6e8e8;border-radius:999px;background:#fff;color:#3d5a5e;font-size:14px;font-weight:600;cursor:pointer" style-hover="border-color:#48D1CC">Zvuk ⚙</button>
       <button type="button" onClick="{{ toggleReport }}" style="padding:11px 18px;border:1px solid #d6e8e8;border-radius:999px;background:#fff;color:#3d5a5e;font-size:14px;font-weight:600;cursor:pointer" style-hover="border-color:#48D1CC">Mesečni izveštaj</button>
-      <button type="button" onClick="{{ simulate }}" style="padding:11px 18px;border:1px solid #d6e8e8;border-radius:999px;background:#fff;color:#3d5a5e;font-size:14px;font-weight:600;cursor:pointer" style-hover="border-color:#48D1CC">Test porudžbina</button>
+      <button type="button" onClick="{{ onLogout }}" style="padding:11px 18px;border:1px solid #d6e8e8;border-radius:999px;background:#fff;color:#3d5a5e;font-size:14px;font-weight:600;cursor:pointer" style-hover="border-color:#48D1CC">Odjava</button>
     </div>
   </header>
 
@@ -272,6 +287,7 @@
     <div style="position:fixed;left:50%;bottom:24px;transform:translateX(-50%);max-width:min(92vw,420px);padding:14px 20px;border-radius:999px;background:#15262a;color:#fff;font-size:14px;line-height:1.4;text-align:center">{{ toastText }}</div>
   </sc-if>
 </div>
+</sc-if>
 
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:940,&quot;height&quot;:900}}">
@@ -297,10 +313,12 @@ class Component extends DCLogic {
     alert: null, toast: "", loaded: false,
     open: {}, photos: {}, zipping: {},
     tone: "zvono", volume: 70, settings: false,
-    report: false, month: "", confirm: null
+    report: false, month: "", confirm: null,
+    authed: false, pw: "", loginErr: "", loggingIn: false
   };
 
   componentDidMount() {
+    this.setState({ authed: !!(window.SS_ORDERS && window.SS_ORDERS.isAuthed()) });
     try {
       const saved = localStorage.getItem("ss-admin-sound");
       if (saved !== null) this.setState({ sound: saved === "1" });
@@ -319,10 +337,17 @@ class Component extends DCLogic {
   }
 
   async refresh(first) {
-    if (!window.SS_ORDERS) return;
+    if (!window.SS_ORDERS || !window.SS_ORDERS.isAuthed()) return;
     let orders;
     try { orders = await window.SS_ORDERS.list(); }
-    catch (e) { console.error("orders:", e); return; }
+    catch (e) {
+      console.error("orders:", e);
+      if (/unauthorized/i.test(String(e.message || e))) {
+        window.SS_ORDERS.logout();
+        this.setState({ authed: false, loginErr: "Sesija je istekla — prijavite se ponovo." });
+      }
+      return;
+    }
 
     const known = this.state.orders.map(o => o.id);
     const fresh = first ? [] : orders.filter(o => known.indexOf(o.id) === -1);
@@ -581,9 +606,41 @@ class Component extends DCLogic {
       (primary ? "#48D1CC;background:#48D1CC;color:#08454a" : "#d6e8e8;background:#fff;color:#3d5a5e");
 
     return {
-      sourceLabel: window.SS_ORDERS && window.SS_ORDERS.isMock
-        ? "Test podaci — backend još nije povezan"
-        : "Uživo",
+      locked: !s.authed,
+      unlocked: s.authed,
+      wrapStyle: "min-height:100vh;max-width:940px;margin:0 auto;padding:32px 20px 60px;display:flex;flex-direction:column;gap:20px",
+      pw: s.pw,
+      loginErr: s.loginErr,
+      loggingIn: s.loggingIn,
+      loginLabel: s.loggingIn ? "Prijava…" : "Prijavi se",
+      onPw: e => this.setState({ pw: e.target.value }),
+      onLogin: async e => {
+        e.preventDefault();
+        if (this.state.loggingIn) return;
+        this.setState({ loggingIn: true, loginErr: "" });
+        try {
+          await window.SS_ORDERS.login(this.state.pw);
+          /* Confirm the token actually reads orders before unlocking, so a
+             backend problem shows its own message instead of an empty page. */
+          await window.SS_ORDERS.list();
+          this.setState({ authed: true, pw: "", loggingIn: false });
+          this.refresh(true);
+        } catch (err) {
+          const msg = String(err.message || err);
+          window.SS_ORDERS.logout();
+          this.setState({
+            loggingIn: false,
+            loginErr: /unauthorized/i.test(msg)
+              ? "Server je odbio token — ponovo deploy-ujte Apps Script (New deployment)."
+              : msg
+          });
+        }
+      },
+      onLogout: () => {
+        window.SS_ORDERS.logout();
+        this.setState({ authed: false, orders: [], pw: "", loginErr: "" });
+      },
+      sourceLabel: "Uživo",
       soundLabel: s.sound ? "🔔 Zvuk uključen" : "🔕 Zvuk isključen",
       soundStyle: "padding:11px 18px;border-radius:999px;font-size:14px;font-weight:600;cursor:pointer;border:1px solid " +
         (s.sound ? "#48D1CC;background:#48D1CC;color:#08454a" : "#d6e8e8;background:#fff;color:#3d5a5e"),
@@ -593,7 +650,6 @@ class Component extends DCLogic {
         try { localStorage.setItem("ss-admin-sound", next ? "1" : "0"); } catch (e) {}
         if (next) setTimeout(() => this.beep(), 40);
       },
-      simulate: () => { window.SS_ORDERS.addMockOrder(); this.refresh(false); },
 
       settingsOpen: s.settings,
       toggleSettings: () => this.setState({ settings: !s.settings }),
