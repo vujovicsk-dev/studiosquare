@@ -1,119 +1,108 @@
 /* Studio Square — orders data source for admin.html.
 
-   Everything the admin page needs goes through window.SS_ORDERS. Right now it
-   is backed by mock data in memory. To move to Google Apps Script later,
-   set ENDPOINT to the deployed web-app URL — the four functions below already
-   speak the shape the Apps Script should return, so no admin code changes:
+   Backed by the Google Apps Script web app (Sheets + private Drive). The
+   admin password is never in this file: it is posted to the script, which
+   checks it against a script property and returns a token. The token lives
+   in sessionStorage and is sent with every later request.
 
-     GET  ENDPOINT?action=list                  -> { orders: [ ...order ] }
-     GET  ENDPOINT?action=photos&id=<orderId>   -> { photos: [ { name, url, copies } ] }
-       copies = how many prints of THAT photo were ordered; the order's
-       copies_total is their sum. One order = one format for all its photos.
-     POST ENDPOINT { action:"status", id, status }  -> { ok:true }
-     POST ENDPOINT { action:"notify", id, title, body } -> { ok:true }
-     POST ENDPOINT { action:"delete", id }          -> { ok:true }
-       The Apps Script side of "delete" must also remove that order's Drive
-       folder and its Sheets row — the admin only asks, it does not delete.
+     POST { action:"login", password }        -> { ok, token }
+     GET  ?action=list&token=…                -> { orders: [ …order ] }
+     GET  ?action=photos&id=…&token=…         -> { photos: [ { name, url, copies } ] }
+     POST { action:"status", id, status, token }
+     POST { action:"delete", id, token }      also trashes the Drive folder
+     POST { action:"notify", id, title, body, token }
 
    order = { id, created_at (ISO), full_name, phone, address, note,
              photo_format, photo_count (distinct photos),
              copies_total (sum of per-photo copies), total_price,
-             status: "novo" | "priprema" | "gotovo",
-             folder_url (Drive link, optional) }                             */
+             status: "novo" | "priprema" | "gotovo", spec, folder_url }      */
 (function () {
-  var ENDPOINT = '';           /* '' = mock mode */
-  var POLL_MS = 8000;
+  var ENDPOINT = 'https://script.google.com/macros/s/AKfycbxgAz_RFMiEQjebRM87C6Bm7L6RnAINVsyC_mM8D-vRoGJ1Q_gq4UPzAnU4ui-PQJNZ5A/exec';
+  var POLL_MS = 15000;
+  var KEY = 'ss-admin-token';
 
-  /* spec = copies ordered for each distinct photo, in order. */
-  function build(o, spec, unit) {
-    o.spec = spec;
-    o.photo_count = spec.length;
-    o.copies_total = spec.reduce(function (n, c) { return n + c; }, 0);
-    o.total_price = o.copies_total * unit;
-    return o;
+  function token() {
+    try { return sessionStorage.getItem(KEY) || ''; } catch (e) { return ''; }
   }
 
-  var MOCK = [
-    build({ id: '4193', created_at: iso(-14), full_name: 'Milica Jovanović', phone: '+381 64 221 8890',
-      address: '', note: 'Mat papir, hvala.', photo_format: '10 × 15 cm', status: 'novo', folder_url: '' },
-      [4, 2, 1, 3, 1, 2], 45),
-    build({ id: '4192', created_at: iso(-51), full_name: 'Nikola Perić', phone: '+381 60 455 1207',
-      address: 'Danila Kiša 14, Novi Sad', note: '', photo_format: '13 × 18 cm', status: 'priprema', folder_url: '' },
-      [1, 1, 2, 1], 60),
-    build({ id: '4191', created_at: iso(-96), full_name: 'Ana Stanković', phone: '+381 63 908 4412',
-      address: '', note: 'Molim bez belih ivica.', photo_format: '9 × 13 cm', status: 'priprema', folder_url: '' },
-      [2, 2, 2, 2, 4, 1, 1, 6], 30),
-    build({ id: '4176', created_at: iso(-78 * 1440), full_name: 'Vladimir Đurić', phone: '+381 64 771 3320',
-      address: 'Futoška 61, Novi Sad', note: '', photo_format: '13 × 18 cm', status: 'gotovo', folder_url: '' },
-      [3, 3, 2, 1, 1], 60),
-    build({ id: '4175', created_at: iso(-84 * 1440), full_name: 'Katarina Mitrović', phone: '+381 61 552 9043',
-      address: '', note: '', photo_format: '10 × 15 cm', status: 'gotovo', folder_url: '' },
-      [1, 1, 1, 2, 2, 5], 45),
-    build({ id: '4190', created_at: iso(-42 * 1440), full_name: 'Jovan Ristić', phone: '+381 62 334 7781',
-      address: 'Bulevar Oslobođenja 102, Novi Sad', note: '', photo_format: '20 × 30 cm', status: 'gotovo', folder_url: '' },
-      [1, 1, 2], 250),
-    build({ id: '4189', created_at: iso(-47 * 1440), full_name: 'Teodora Lukić', phone: '+381 65 110 2298',
-      address: '', note: '', photo_format: '10 × 15 cm', status: 'gotovo', folder_url: '' },
-      [3, 3, 3, 1], 45)
-  ];
+  /* Apps Script answers authorization and runtime problems with an HTML page,
+     not JSON, so parse defensively and report what actually came back. */
+  async function parse(res, what) {
+    var txt = await res.text();
+    if (!res.ok) throw new Error(what + ': server ' + res.status);
+    var data;
+    try { data = JSON.parse(txt); }
+    catch (e) {
+      console.error('SS_ORDERS ' + what + ' — odgovor nije JSON:', txt.slice(0, 400));
+      throw new Error(what + ': server nije vratio JSON (verovatno Apps Script nije autorizovan — otvorite skriptu i pokrenite je jednom ručno).');
+    }
+    if (!data.ok) throw new Error(data.error || (what + ': greška na serveru'));
+    return data;
+  }
 
-  var NAMES = ['Marko Ilić', 'Sofija Marković', 'Dušan Kovač', 'Iva Radovanović', 'Petar Nikolić'];
-  var FORMATS = [['9 × 13 cm', 30], ['10 × 15 cm', 45], ['13 × 18 cm', 60], ['15 × 21 cm', 90]];
-  var nextId = 4194;
+  async function post(payload) {
+    var body = Object.assign({ token: token() }, payload);
+    var res = await fetch(ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(body)
+    });
+    return parse(res, payload.action);
+  }
 
-  function iso(minutesAgo) { return new Date(Date.now() + minutesAgo * 60000).toISOString(); }
-  function pick(a) { return a[Math.floor(Math.random() * a.length)]; }
+  async function get(params) {
+    var qs = Object.keys(params).map(function (k) {
+      return k + '=' + encodeURIComponent(params[k]);
+    }).join('&');
+    var res = await fetch(ENDPOINT + '?' + qs + '&token=' + encodeURIComponent(token()));
+    return parse(res, params.action);
+  }
 
-  /* Test helper: fabricates an order so the alert and sound can be tried out.
-     Delete this together with the mock block once the backend is live. */
-  function addMockOrder() {
-    var fmt = pick(FORMATS);
-    var spec = [];
-    var n = 3 + Math.floor(Math.random() * 6);
-    for (var i = 0; i < n; i++) spec.push(1 + Math.floor(Math.random() * 4));
-    MOCK.unshift(build({
-      id: String(nextId++), created_at: new Date().toISOString(), full_name: pick(NAMES),
-      phone: '+381 6' + Math.floor(Math.random() * 9) + ' ' + (100 + Math.floor(Math.random() * 899)) + ' ' + (1000 + Math.floor(Math.random() * 8999)),
-      address: '', note: '', photo_format: fmt[0], status: 'novo', folder_url: ''
-    }, spec, fmt[1]));
+  async function login(password) {
+    var res = await fetch(ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'login', password: password })
+    });
+    var data = await parse(res, 'login');
+    if (!data.token) throw new Error('Server nije vratio token — ponovo deploy-ujte Apps Script.');
+    try { sessionStorage.setItem(KEY, data.token); }
+    catch (e) { throw new Error('Pregledač blokira sessionStorage — isključite privatni režim ili blokadu kolačića.'); }
+    if (!token()) throw new Error('Token nije sačuvan u pregledaču.');
+    console.info('SS_ORDERS: prijava uspešna, token dužine', data.token.length);
+    return true;
+  }
+
+  function logout() {
+    try { sessionStorage.removeItem(KEY); } catch (e) {}
   }
 
   async function list() {
-    if (!ENDPOINT) return MOCK.map(function (o) { return Object.assign({}, o); });
-    var res = await fetch(ENDPOINT + '?action=list', { method: 'GET' });
-    if (!res.ok) throw new Error('list failed: ' + res.status);
-    var data = await res.json();
+    var data = await get({ action: 'list' });
     return data.orders || [];
   }
 
-  async function setStatus(id, status) {
-    if (!ENDPOINT) {
-      for (var i = 0; i < MOCK.length; i++) if (MOCK[i].id === id) MOCK[i].status = status;
-      return { ok: true };
-    }
-    var res = await fetch(ENDPOINT, {
-      method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action: 'status', id: id, status: status })
-    });
-    if (!res.ok) throw new Error('status failed: ' + res.status);
-    return res.json();
+  async function listPhotos(order) {
+    var data = await get({ action: 'photos', id: order.id });
+    return data.photos || [];
   }
 
-  /* Notifies the customer their order is ready. In mock mode this shows the
-     notification locally so the wording and permissions can be verified;
-     with a backend it also asks the server to push/SMS the customer. */
+  async function setStatus(id, status) {
+    return post({ action: 'status', id: id, status: status });
+  }
+
+  async function remove(id) {
+    return post({ action: 'delete', id: id });
+  }
+
+  /* Tells the shop's backend the order is done, and shows the browser
+     notification locally so the wording can be checked on the spot. */
   async function notifyReady(order) {
     var title = 'Studio Square';
     var body = '📸 Vaše fotografije su gotove! Porudžbina #' + order.id + ' je spremna za preuzimanje.';
 
-    if (ENDPOINT) {
-      try {
-        await fetch(ENDPOINT, {
-          method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify({ action: 'notify', id: order.id, title: title, body: body })
-        });
-      } catch (e) { console.error('notify:', e); }
-    }
+    try { await post({ action: 'notify', id: order.id, title: title, body: body }); }
+    catch (e) { console.error('notify:', e); }
 
     if (!('Notification' in window)) return { shown: false, body: body };
     var perm = Notification.permission;
@@ -132,68 +121,11 @@
     }
   }
 
-  /* Photos of one order. Mock mode draws placeholder JPEGs in the browser;
-     with a backend this returns the Drive file links for that order's folder. */
-  var mockPhotoCache = {};
-
-  function mockPhoto(order, i) {
-    var c = document.createElement('canvas');
-    c.width = 900; c.height = 600;
-    var x = c.getContext('2d');
-    var hue = (i * 47 + Number(order.id)) % 360;
-    var g = x.createLinearGradient(0, 0, 900, 600);
-    g.addColorStop(0, 'hsl(' + hue + ',52%,72%)');
-    g.addColorStop(1, 'hsl(' + ((hue + 48) % 360) + ',46%,52%)');
-    x.fillStyle = g; x.fillRect(0, 0, 900, 600);
-    x.fillStyle = 'rgba(255,255,255,.88)';
-    x.font = 'bold 120px Georgia, serif';
-    x.textAlign = 'center'; x.textBaseline = 'middle';
-    x.fillText(String(i + 1), 450, 300);
-    x.font = '34px system-ui, sans-serif';
-    x.fillText('test fotografija', 450, 400);
-    return c.toDataURL('image/jpeg', 0.82);
-  }
-
-  async function listPhotos(order) {
-    if (ENDPOINT) {
-      var res = await fetch(ENDPOINT + '?action=photos&id=' + encodeURIComponent(order.id));
-      if (!res.ok) throw new Error('photos failed: ' + res.status);
-      var data = await res.json();
-      return data.photos || [];
-    }
-    if (!mockPhotoCache[order.id]) {
-      var spec = order.spec || [];
-      var out = [];
-      for (var i = 0; i < spec.length; i++) {
-        out.push({
-          name: String(i + 1).padStart(4, '0') + '-IMG_' + (2000 + i) + '.jpg',
-          url: mockPhoto(order, i),
-          copies: spec[i]
-        });
-      }
-      mockPhotoCache[order.id] = out;
-    }
-    return mockPhotoCache[order.id];
-  }
-
-  async function remove(id) {
-    if (!ENDPOINT) {
-      for (var i = MOCK.length - 1; i >= 0; i--) if (MOCK[i].id === id) MOCK.splice(i, 1);
-      delete mockPhotoCache[id];
-      return { ok: true };
-    }
-    var res = await fetch(ENDPOINT, {
-      method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action: 'delete', id: id })
-    });
-    if (!res.ok) throw new Error('delete failed: ' + res.status);
-    return res.json();
-  }
-
   window.SS_ORDERS = {
-    listPhotos: listPhotos,
-    remove: remove,
-    list: list, setStatus: setStatus, notifyReady: notifyReady,
-    addMockOrder: addMockOrder, pollMs: POLL_MS, isMock: !ENDPOINT
+    login: login, logout: logout,
+    isAuthed: function () { return !!token(); },
+    list: list, listPhotos: listPhotos, setStatus: setStatus,
+    remove: remove, notifyReady: notifyReady,
+    pollMs: POLL_MS, isMock: false
   };
 })();
