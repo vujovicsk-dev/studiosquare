@@ -1,11 +1,11 @@
-const CACHE = 'studio-square-v84';
+const CACHE = 'studio-square-v87';
 const CORE = [
   './',
   './index.html',
   './support.js',
   './pwa.js',
   './legacy.js',
-  './appwrite.js',
+  './gas.js',
   './manifest.webmanifest',
   './logo.png',
   './icon-192.png',
