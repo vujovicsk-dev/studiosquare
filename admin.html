@@ -791,7 +791,7 @@ class Component extends DCLogic {
           photosHeading: list
             ? this.plural(list.length, "fotografija", "fotografije", "fotografija") + " · " +
               this.plural(list.reduce((n, p) => n + (p.copies || 1), 0), "komad", "komada", "komada")
-            : "Učitavanje…",
+            : "",
           photosHint: "Paket za štampu ponavlja svaku fotografiju onoliko puta koliko je naručena. Klik na sličicu preuzima original.",
           printLabel: s.zipping[o.id + ":stampa"] ? "Pripremam…" : "🖨️ Pripremi za štampu",
           preparePrint: () => {
