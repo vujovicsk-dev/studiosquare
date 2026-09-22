@@ -12,7 +12,7 @@
 (function () {
   var ENDPOINT = 'https://script.google.com/macros/s/AKfycbxgAz_RFMiEQjebRM87C6Bm7L6RnAINVsyC_mM8D-vRoGJ1Q_gq4UPzAnU4ui-PQJNZ5A/exec';
   var RETRIES = 2;
-  var CONCURRENCY = 6;
+  var CONCURRENCY = 8;
 
   function post(payload) {
     return fetch(ENDPOINT, {

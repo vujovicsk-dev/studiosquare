@@ -1,4 +1,4 @@
-const CACHE = 'studio-square-v93';
+const CACHE = 'studio-square-v94';
 const CORE = [
   './',
   './index.html',

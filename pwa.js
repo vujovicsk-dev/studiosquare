@@ -120,14 +120,9 @@
   }
 
   function onClick() {
-    if (deferred) {
-      openDialog('Instaliraj aplikaciju', [
-        'Kliknite na dugme „Instaliraj“ ispod.',
-        'Potvrdite instalaciju u prozoru koji otvori browser.',
-        'Aplikacija se pojavljuje na početnom ekranu i radi kao zasebna aplikacija.'
-      ], true);
-      return;
-    }
+    // Where the browser can install, install: the click goes straight to the
+    // native prompt, with no instruction step in between.
+    if (deferred) { runPrompt(); return; }
     if (isIOS()) {
       openDialog('Dodaj na početni ekran', [
         'Dodirnite dugme za deljenje na dnu Safarija.',

@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+<link rel="preconnect" href="https://script.google.com" crossorigin>
 <meta charset="utf-8">
 <title>Studio Square — porudžbine</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -415,7 +416,8 @@ class Component extends DCLogic {
       "</td><td class='r'>" + f.photos + "</td><td class='r'>" + f.copies +
       "</td><td class='r'>" + this.dinars(f.total) + "</td></tr>").join("");
 
-    const html = "<!DOCTYPE html><html><head><meta charset='utf-8'><title>Studio Square — " + esc(label) +
+    const html = "<!DOCTYPE html><html><head>
+<link rel="preconnect" href="https://script.google.com" crossorigin><meta charset='utf-8'><title>Studio Square — " + esc(label) +
       "</title><style>" +
       "@page{margin:18mm}" +
       "body{font-family:Georgia,serif;color:#15262a;margin:0}" +

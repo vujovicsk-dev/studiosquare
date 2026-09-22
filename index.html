@@ -70,6 +70,8 @@
 <x-dc>
 <helmet>
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://script.google.com" crossorigin>
+<link rel="dns-prefetch" href="https://script.googleusercontent.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Lora:wght@500;600;700&family=Figtree:wght@400;500;600;700;800;900&display=swap">
 <link rel="manifest" href="manifest.webmanifest">
@@ -593,16 +595,36 @@ class Component extends DCLogic {
   /* Only Safari can decode HEIC natively. Everywhere else (Android Chrome,
      desktop Chrome/Firefox) the decoder is fetched on demand, the first time
      a HEIC file actually appears — nothing extra loads for JPG users. */
-  loadHeicDecoder() {
-    if (this._heic) return this._heic;
-    this._heic = new Promise((ok, no) => {
-      if (window.heic2any) { ok(window.heic2any); return; }
+  HEIC_SOURCES = [
+    "./heic2any.min.js",
+    "https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js",
+    "https://unpkg.com/heic2any@0.0.4/dist/heic2any.min.js"
+  ];
+
+  loadScript(src) {
+    return new Promise((ok, no) => {
       const s = document.createElement("script");
-      s.src = "https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js";
-      s.onload = () => window.heic2any ? ok(window.heic2any) : no(new Error("heic"));
-      s.onerror = () => no(new Error("heic"));
+      s.src = src;
+      s.async = true;
+      s.onload = () => ok();
+      s.onerror = () => no(new Error(src));
       document.head.appendChild(s);
     });
+  }
+
+  loadHeicDecoder() {
+    if (this._heic) return this._heic;
+    this._heic = (async () => {
+      if (window.heic2any) return window.heic2any;
+      for (const src of this.HEIC_SOURCES) {
+        try {
+          await this.loadScript(src);
+          if (window.heic2any) return window.heic2any;
+        } catch (e) { /* try the next source */ }
+      }
+      throw new Error("heic-decoder");
+    })();
+    this._heic.catch(() => { this._heic = null; });
     return this._heic;
   }
 
@@ -617,11 +639,16 @@ class Component extends DCLogic {
   async toJpeg(input) {
     let file = input;
     if (this.isHeic(file)) {
-      /* Safari decodes HEIC itself; if that path works we keep it, otherwise
-         fall back to the decoder. Either way the result is a JPG. */
-      let native = false;
-      try { const probe = await this.decode(file); if (probe.close) probe.close(); native = true; } catch (err) {}
-      if (!native) file = await this.heicToJpegFile(file);
+      /* Safari decodes HEIC itself. Everywhere else the decoder runs, in the
+         browser — nothing is uploaded anywhere for the conversion. Probing
+         first costs nothing on Safari and avoids loading the decoder there. */
+      let bmp = null;
+      try { bmp = await this.decode(file); } catch (err) {}
+      if (bmp && (bmp.width || bmp.naturalWidth)) {
+        if (bmp.close) bmp.close();
+      } else {
+        file = await this.heicToJpegFile(file);
+      }
     }
     const bmp = await this.decode(file);
     const w = bmp.width || bmp.naturalWidth;
