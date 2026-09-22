@@ -623,11 +623,12 @@ class Component extends DCLogic {
         if (this.state.loggingIn) return;
         this.setState({ loggingIn: true, loginErr: "" });
         try {
-          await window.SS_ORDERS.login(this.state.pw);
-          /* Confirm the token actually reads orders before unlocking, so a
-             backend problem shows its own message instead of an empty page. */
-          await window.SS_ORDERS.list();
-          this.setState({ authed: true, pw: "", loggingIn: false });
+          /* The login reply already carries the first page of orders, so the
+             panel opens on that one round trip — no verification call, no
+             loading screen. */
+          const first = await window.SS_ORDERS.login(this.state.pw);
+          const orders = (first && first.orders) || [];
+          this.setState({ authed: true, pw: "", loggingIn: false, orders: orders });
           this.refresh(true);
         } catch (err) {
           const msg = String(err.message || err);
@@ -773,7 +774,12 @@ class Component extends DCLogic {
             : "Učitavanje…",
           photosHint: "Paket za štampu ponavlja svaku fotografiju onoliko puta koliko je naručena. Klik na sličicu preuzima original.",
           printLabel: s.zipping[o.id + ":stampa"] ? "Pripremam…" : "🖨️ Pripremi za štampu",
-          preparePrint: () => this.downloadZip(o, "stampa"),
+          preparePrint: () => {
+            /* Preparing the print pack IS the start of work, so the order
+               moves to "U pripremi" on its own. */
+            if (o.status === "novo") this.change(o, "priprema");
+            return this.downloadZip(o, "stampa");
+          },
           zipLabel: s.zipping[o.id + ":originali"] ? "Pakujem…" : "Preuzmi sve (ZIP)",
           downloadAll: () => this.downloadZip(o, "originali"),
           cardStyle: "display:flex;flex-direction:column;gap:14px;padding:20px;border-radius:24px;background:#f7fdfd;border:1px solid " +

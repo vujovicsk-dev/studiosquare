@@ -73,7 +73,7 @@
        opens on one round trip instead of two. */
     if (data.orders) preloaded = data.orders;
     console.info('SS_ORDERS: prijava uspešna, token dužine', data.token.length);
-    return true;
+    return { ok: true, orders: data.orders || null };
   }
 
   function logout() {

@@ -72,19 +72,14 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Lora:wght@500;600;700&family=Figtree:wght@400;500;600;700;800;900&display=swap">
-<link rel="stylesheet" href="./ds/organic-3ba02c43-f29f-4d43-a84d-8827018ee00e/styles.css">
-<script src="./ds/organic-3ba02c43-f29f-4d43-a84d-8827018ee00e/ds-bundle.js"></script>
-<link rel="manifest" href="./manifest.webmanifest">
+<link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#48D1CC">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Studio Square - izrada fotografija">
 <link rel="apple-touch-icon" href="./apple-touch-icon.png">
-<link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
 <link rel="icon" href="./icon-192.png" type="image/png">
-<script src="./legacy.js"></script>
-<script src="./gas.js"></script>
 <script src="./pwa.js"></script>
 <style>
   :root{
@@ -137,6 +132,8 @@
   }
   *:focus-visible{outline:2px solid #0e9c9c;outline-offset:2px}
 </style>
+<script src="./legacy.js"></script>
+<script src="./gas.js"></script>
 </helmet>
 
 <div style="min-height:100vh;background:#e6f7f7;font-family:var(--font-body);color:#15262a;padding:0">
@@ -192,6 +189,13 @@
           <a href="tel:+381616644503" style="padding:12px 22px;border:1px solid #d6e8e8;border-radius:999px;color:#3d5a5e;font-size:15px;font-weight:600;text-decoration:none">{{ t.callUs }}</a>
         </div>
       </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ hasReadyNote }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;left:16px;right:16px;bottom:16px;z-index:60;display:flex;align-items:center;gap:12px;max-width:520px;margin:0 auto;padding:16px 18px;border-radius:22px;background:#48D1CC;box-shadow:0 10px 30px rgba(8,69,74,.22)">
+      <span style="flex:1;font-size:15px;line-height:1.5;font-weight:700;color:#08454a">{{ readyNote }}</span>
+      <button type="button" onClick="{{ dismissReady }}" aria-label="Zatvori" style="flex:none;width:32px;height:32px;border:0;border-radius:999px;background:rgba(255,255,255,.55);color:#08454a;font-family:var(--font-body);font-size:16px;font-weight:700;cursor:pointer">✕</button>
     </div>
   </sc-if>
 
@@ -479,7 +483,146 @@ class Component extends DCLogic {
     }
   }
 
-  async toJpeg(file) {
+  /* ---- "your photos are ready" notice -------------------------------
+     The shop marks the order done in the admin page; this side keeps the
+     order id and checks its status, so the customer is told without any
+     extra step for the shop. While the page is open the notice appears in
+     the page; once notification permission is granted (asked for at the
+     moment of ordering, when it makes sense) it also arrives as a real
+     browser / installed-app notification. */
+
+  WATCH_KEY = "ss-watch";
+
+  readWatch() {
+    try { return JSON.parse(localStorage.getItem(this.WATCH_KEY) || "[]"); }
+    catch (e) { return []; }
+  }
+
+  writeWatch(list) {
+    try { localStorage.setItem(this.WATCH_KEY, JSON.stringify(list)); } catch (e) {}
+    this.syncWatch(list);
+  }
+
+  /* Hand the list to the service worker so the notice can also arrive with
+     the app closed, and ask for periodic background sync where the browser
+     offers it (installed app, Android Chrome). */
+  syncWatch(list) {
+    if (!navigator.serviceWorker) return;
+    const payload = list.map(w => Object.assign({}, w, { lang: this.state.lang }));
+    navigator.serviceWorker.ready.then(reg => {
+      if (reg.active) reg.active.postMessage({ type: "ss-watch", list: payload });
+      if (reg.periodicSync && navigator.permissions) {
+        navigator.permissions.query({ name: "periodic-background-sync" })
+          .then(p => { if (p.state === "granted") reg.periodicSync.register("ss-orders", { minInterval: 30 * 60 * 1000 }).catch(() => {}); })
+          .catch(() => {});
+      }
+      if (reg.sync) reg.sync.register("ss-orders").catch(() => {});
+    }).catch(() => {});
+  }
+
+  rememberOrder(id) {
+    const phone = this.state.phone;
+    const list = this.readWatch().filter(w => String(w.id) !== String(id));
+    list.push({ id: String(id), phone: phone, told: false });
+    this.writeWatch(list.slice(-10));
+    if (window.Notification && Notification.permission === "default") {
+      try { Notification.requestPermission(); } catch (e) {}
+    }
+    this.checkSoon(20000);
+  }
+
+  componentDidMount() {
+    this.checkSoon(4000);
+    const list = this.readWatch();
+    if (list.some(w => !w.told)) this.syncWatch(list);
+  }
+
+  componentWillUnmount() {
+    clearTimeout(this._watchT);
+  }
+
+  checkSoon(ms) {
+    clearTimeout(this._watchT);
+    this._watchT = setTimeout(() => this.checkOrders(), ms);
+  }
+
+  async checkOrders() {
+    const list = this.readWatch();
+    const open = list.filter(w => !w.told);
+    if (!open.length || !window.SS_BACKEND || !window.SS_BACKEND.orderStatus) {
+      if (open.length) this.checkSoon(60000);
+      return;
+    }
+    let changed = false;
+    for (const w of open) {
+      try {
+        const r = await window.SS_BACKEND.orderStatus(w.id, w.phone);
+        if (r && r.ok && r.status === "gotovo") {
+          w.told = true;
+          changed = true;
+          this.announceReady(w.id);
+        }
+      } catch (e) { /* offline or blocked — try again on the next tick */ }
+    }
+    if (changed) this.writeWatch(list);
+    if (list.some(w => !w.told)) this.checkSoon(60000);
+  }
+
+  announceReady(id) {
+    const t = this.state.lang === "en"
+      ? "Your photos are ready for collection."
+      : "Vaše fotografije su gotove i spremne za preuzimanje.";
+    this.setState({ readyNote: t });
+
+    if (window.Notification && Notification.permission === "granted") {
+      const opts = { body: t, icon: "./icon-192.png", badge: "./icon-192.png", tag: "ss-" + id };
+      if (navigator.serviceWorker && navigator.serviceWorker.ready) {
+        navigator.serviceWorker.ready
+          .then(reg => reg.showNotification("Studio Square", opts))
+          .catch(() => { try { new Notification("Studio Square", opts); } catch (e) {} });
+      } else {
+        try { new Notification("Studio Square", opts); } catch (e) {}
+      }
+    }
+  }
+
+  isHeic(file) {
+    return /hei[cf]/i.test(file.type) || /\.hei[cf]$/i.test(file.name);
+  }
+
+  /* Only Safari can decode HEIC natively. Everywhere else (Android Chrome,
+     desktop Chrome/Firefox) the decoder is fetched on demand, the first time
+     a HEIC file actually appears — nothing extra loads for JPG users. */
+  loadHeicDecoder() {
+    if (this._heic) return this._heic;
+    this._heic = new Promise((ok, no) => {
+      if (window.heic2any) { ok(window.heic2any); return; }
+      const s = document.createElement("script");
+      s.src = "https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js";
+      s.onload = () => window.heic2any ? ok(window.heic2any) : no(new Error("heic"));
+      s.onerror = () => no(new Error("heic"));
+      document.head.appendChild(s);
+    });
+    return this._heic;
+  }
+
+  async heicToJpegFile(file) {
+    const heic2any = await this.loadHeicDecoder();
+    const out = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.95 });
+    const blob = Array.isArray(out) ? out[0] : out;
+    if (!blob || !blob.size) throw new Error("heic");
+    return new File([blob], this.jpegName(file.name), { type: "image/jpeg" });
+  }
+
+  async toJpeg(input) {
+    let file = input;
+    if (this.isHeic(file)) {
+      /* Safari decodes HEIC itself; if that path works we keep it, otherwise
+         fall back to the decoder. Either way the result is a JPG. */
+      let native = false;
+      try { const probe = await this.decode(file); if (probe.close) probe.close(); native = true; } catch (err) {}
+      if (!native) file = await this.heicToJpegFile(file);
+    }
     const bmp = await this.decode(file);
     const w = bmp.width || bmp.naturalWidth;
     const h = bmp.height || bmp.naturalHeight;
@@ -560,6 +703,7 @@ class Component extends DCLogic {
         window.removeEventListener("beforeunload", guard);
         this.pending = null;
         this.setState({ uploading: null, sent: { id: id } });
+        this.rememberOrder(id);
       })
       .catch(err => {
         console.error("backend:", err);
@@ -592,6 +736,9 @@ class Component extends DCLogic {
       reset: () => this.setState({ photos: [], name: "", phone: "", address: "", note: "", sent: null }),
 
       cartCount: copies,
+      readyNote: s.readyNote || "",
+      hasReadyNote: !!s.readyNote,
+      dismissReady: () => this.setState({ readyNote: "" }),
       uploading: !!s.uploading,
       uploadProgress: s.uploading ? s.uploading.done + " / " + s.uploading.total : "",
       uploadBarStyle: "height:100%;border-radius:999px;background:#48D1CC;transition:width .2s;width:" +

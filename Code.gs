@@ -161,6 +161,17 @@ function setStatus(d) {
   return { ok: true };
 }
 
+/* Public status lookup for the customer's own order. Needs both the order id
+   and the phone number it was placed with, so one id alone reveals nothing. */
+function publicStatus(id, phone) {
+  var r = findRow(id);
+  if (!r) return { ok: false, error: 'nepoznata porudžbina' };
+  var a = String(r.phone || '').replace(/[^0-9]/g, '');
+  var b = String(phone || '').replace(/[^0-9]/g, '');
+  if (!a || a !== b) return { ok: false, error: 'nepoznata porudžbina' };
+  return { ok: true, id: String(r.id), status: r.status || 'novo' };
+}
+
 function removeOrder(id) {
   var r = findRow(id);
   if (!r) return { ok: true };
@@ -192,6 +203,7 @@ function doGet(e) {
   try {
     var a = (e.parameter.action || '').toLowerCase();
     if (a === 'ping') return json({ ok: true });
+    if (a === 'orderstatus') return json(publicStatus(e.parameter.id, e.parameter.phone));
     requireAdmin(e.parameter.token);
     if (a === 'list') return json(listOrders());
     if (a === 'photos') return json(listPhotos(e.parameter.id));

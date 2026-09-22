@@ -12,7 +12,7 @@
 (function () {
   var ENDPOINT = 'https://script.google.com/macros/s/AKfycbxgAz_RFMiEQjebRM87C6Bm7L6RnAINVsyC_mM8D-vRoGJ1Q_gq4UPzAnU4ui-PQJNZ5A/exec';
   var RETRIES = 2;
-  var CONCURRENCY = 3;
+  var CONCURRENCY = 6;
 
   function post(payload) {
     return fetch(ENDPOINT, {
@@ -96,5 +96,13 @@
     return id;
   }
 
-  window.SS_BACKEND = { submitOrder: submitOrder, endpoint: ENDPOINT };
+  /* The customer's own order status — id + phone, no token needed. */
+  async function orderStatus(id, phone) {
+    var u = ENDPOINT + '?action=orderstatus&id=' + encodeURIComponent(id) +
+            '&phone=' + encodeURIComponent(phone);
+    var r = await fetch(u);
+    return await r.json();
+  }
+
+  window.SS_BACKEND = { submitOrder: submitOrder, orderStatus: orderStatus, endpoint: ENDPOINT };
 })();
