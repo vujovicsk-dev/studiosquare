@@ -226,6 +226,10 @@
       </label>
       <input id="photo-input" type="file" accept="image/jpeg,image/jpg,image/png,image/heic,image/heif,.jpg,.jpeg,.png,.heic,.heif" multiple="{{ true }}" onChange="{{ onFiles }}">
 
+      <sc-if value="{{ isConverting }}" hint-placeholder-val="{{ false }}">
+        <p style="margin:0;padding:12px 16px;border:1px solid #c9eded;border-radius:16px;background:#f7fdfd;font-size:14px;line-height:1.5;color:#3d5a5e">{{ convertingLabel }}</p>
+      </sc-if>
+
       <sc-if value="{{ hasUploadError }}" hint-placeholder-val="{{ false }}">
         <p style="margin:0;padding:12px 16px;border:1px solid #f0c9c9;border-radius:16px;background:#fdf6f6;font-size:14px;line-height:1.5;color:#8a3b3b">{{ uploadError }}</p>
       </sc-if>
@@ -441,7 +445,7 @@ const STR = {
 class Component extends DCLogic {
   state = {
     photos: [], format: "10x15", delivery: "radnja",
-    name: "", phone: "", address: "", note: "", sent: null, lang: "sr", uploadError: "", uploading: null, upErr: ""
+    name: "", phone: "", address: "", note: "", sent: null, lang: "sr", uploadError: "", uploading: null, upErr: "", converting: null
   };
 
   dinars(n) { return n.toLocaleString("sr-RS") + " RSD"; }
@@ -596,7 +600,6 @@ class Component extends DCLogic {
      desktop Chrome/Firefox) the decoder is fetched on demand, the first time
      a HEIC file actually appears — nothing extra loads for JPG users. */
   HEIC_SOURCES = [
-    "./heic2any.min.js",
     "https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js",
     "https://unpkg.com/heic2any@0.0.4/dist/heic2any.min.js"
   ];
@@ -647,7 +650,9 @@ class Component extends DCLogic {
       if (bmp && (bmp.width || bmp.naturalWidth)) {
         if (bmp.close) bmp.close();
       } else {
-        file = await this.heicToJpegFile(file);
+        /* The decoder already hands back a finished JPEG — running it through
+           the canvas again would be a second generation of loss for nothing. */
+        return await this.heicToJpegFile(file);
       }
     }
     const bmp = await this.decode(file);
@@ -681,28 +686,49 @@ class Component extends DCLogic {
     e.target.value = "";
     if (!files.length) return;
 
-    const accepted = [];
     const failed = [];
-    for (let i = 0; i < files.length; i++) {
-      const f = files[i];
-      let jpg = null;
-      if (this.isJpeg(f)) jpg = f;
-      else {
-        try { jpg = await this.toJpeg(f); } catch (err) { failed.push(f.name); }
-      }
-      if (!jpg) continue;
-      accepted.push({
-        key: Date.now() + "-" + i,
+    const stamp = Date.now();
+
+    /* JPEGs are taken as they are. PNG and HEIC are converted a few at a
+       time — decoding a HEIC takes seconds on a phone, so doing them one
+       after another would freeze this step on a large selection. Each photo
+       joins the list the moment it is ready, so thumbnails fill in as the
+       work proceeds instead of all at the very end. */
+    const jpegs = files.filter(f => this.isJpeg(f));
+    const rest = files.filter(f => !this.isJpeg(f));
+
+    const add = (jpg, i) => this.setState(s => ({
+      photos: s.photos.concat([{
+        key: stamp + "-" + i,
         name: jpg.name,
         size: (jpg.size / 1048576).toFixed(1) + " MB",
         url: URL.createObjectURL(jpg),
         file: jpg,
         qty: 1
-      });
+      }])
+    }));
+
+    jpegs.forEach((f, i) => add(f, "j" + i));
+
+    if (rest.length) {
+      this.setState({ converting: { done: 0, total: rest.length } });
+      let next = 0, done = 0;
+      const worker = async () => {
+        while (next < rest.length) {
+          const i = next++;
+          try { add(await this.toJpeg(rest[i]), "c" + i); }
+          catch (err) { failed.push(rest[i].name); }
+          done++;
+          this.setState({ converting: { done: done, total: rest.length } });
+        }
+      };
+      const pool = [];
+      for (let w = 0; w < Math.min(3, rest.length); w++) pool.push(worker());
+      await Promise.all(pool);
+      this.setState({ converting: null });
     }
 
     this.setState(s => ({
-      photos: s.photos.concat(accepted),
       uploadError: failed.length
         ? (s.lang === "en"
             ? "Could not convert to JPG: " + failed.join(", ") + ". Please save the photo as JPG and try again."
@@ -777,6 +803,12 @@ class Component extends DCLogic {
       promoTitleA: t.promoTitle.split("|")[0],
       promoTitleB: t.promoTitle.split("|")[1],
       uploadError: s.uploadError,
+      isConverting: !!s.converting,
+      convertingLabel: s.converting
+        ? (s.lang === "en"
+            ? "Preparing photos… " + s.converting.done + " / " + s.converting.total
+            : "Pripremam fotografije… " + s.converting.done + " / " + s.converting.total)
+        : "",
       hasUploadError: !!s.uploadError,
       onFiles: this.addFiles,
       hasPhotos: s.photos.length > 0,

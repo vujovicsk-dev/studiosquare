@@ -128,6 +128,7 @@
   }
 
   window.SS_ORDERS = {
+    endpoint: ENDPOINT,
     login: login, logout: logout,
     isAuthed: function () { return !!token(); },
     list: list, listPhotos: listPhotos, setStatus: setStatus,

@@ -328,6 +328,15 @@ class Component extends DCLogic {
       const vol = localStorage.getItem("ss-admin-volume");
       if (vol !== null) this.setState({ volume: Math.max(0, Math.min(100, Number(vol) || 0)) });
     } catch (e) {}
+
+    /* Apps Script sleeps between uses and its first call after that can take
+       fifteen seconds. Waking it while the password is still being typed means
+       the login itself lands on a warm server. */
+    try {
+      const ep = window.SS_ORDERS && window.SS_ORDERS.endpoint;
+      if (ep) fetch(ep + "?action=ping", { cache: "no-store" }).catch(() => {});
+    } catch (e) {}
+
     this.refresh(true);
     this.timer = setInterval(() => this.refresh(false), (window.SS_ORDERS && window.SS_ORDERS.pollMs) || 8000);
   }
@@ -346,6 +355,10 @@ class Component extends DCLogic {
       if (/unauthorized/i.test(String(e.message || e))) {
         window.SS_ORDERS.logout();
         this.setState({ authed: false, loginErr: "Sesija je istekla — prijavite se ponovo." });
+      } else {
+        /* Never leave the panel in a waiting state: mark it loaded and say
+           what went wrong, so a failed poll cannot look like a stuck screen. */
+        this.setState({ loaded: true, toast: "Porudžbine nisu učitane: " + String(e.message || e) });
       }
       return;
     }
@@ -629,7 +642,13 @@ class Component extends DCLogic {
              loading screen. */
           const first = await window.SS_ORDERS.login(this.state.pw);
           const orders = (first && first.orders) || [];
-          this.setState({ authed: true, pw: "", loggingIn: false, orders: orders });
+          /* Open the panel on the login reply itself. If that reply already
+             carried the orders we are done; otherwise they arrive a moment
+             later and the panel is usable in the meantime. */
+          this.setState({
+            authed: true, pw: "", loggingIn: false,
+            orders: orders, loaded: orders.length > 0
+          });
           this.refresh(true);
         } catch (err) {
           const msg = String(err.message || err);
