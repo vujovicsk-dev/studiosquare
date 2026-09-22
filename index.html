@@ -212,7 +212,7 @@
         <span style="font-size:17px;font-weight:600;color:#0a6b6b">{{ t.addPhotos }}</span>
         <span style="font-size:14px;color:#5b787c">{{ t.addPhotosSub }}</span>
       </label>
-      <input id="photo-input" type="file" accept="image/jpeg,image/jpg,image/png,image/heic,image/heif,.jpg,.jpeg,.png,.heic,.heif" multiple="{{ true }}" onChange="{{ onFiles }}">
+      <input id="photo-input" type="file" accept="image/*,.jpg,.jpeg,.png,.heic,.heif,.HEIC,.HEIF" multiple="{{ true }}" onChange="{{ onFiles }}">
 
       <sc-if value="{{ isConverting }}" hint-placeholder-val="{{ false }}">
         <p style="margin:0;padding:12px 16px;border:1px solid #c9eded;border-radius:16px;background:#f7fdfd;font-size:14px;line-height:1.5;color:#3d5a5e">{{ convertingLabel }}</p>
@@ -323,7 +323,7 @@
         <span style="font-family:var(--font-heading);font-size:30px;color:#0a6b6b;white-space:nowrap">{{ total }}</span>
       </div>
       <p style="margin:0;font-size:13px;line-height:1.5;color:#6b8589;text-align:center">{{ t.leadTime }}</p>
-      <button type="button" onClick="{{ submit }}" disabled="{{ cannotSubmit }}" style="{{ submitStyle }}">{{ t.submit }}</button>
+      <button type="button" onClick="{{ submit }}" disabled="{{ cannotSubmit }}" style="{{ submitStyle }}">{{ submitLabel }}</button>
     </section>
 
   </main>
@@ -396,7 +396,7 @@ const STR = {
     fName: "Ime i prezime", phName: "Marija Petrović", fPhone: "Telefon",
     fAddress: "Adresa za dostavu", phAddress: "Ulica i broj, grad, poštanski broj",
     fNote: "Napomena", phNote: "",
-    srcDevice: "Računar ili telefon", close: "Zatvori", pickSource: "Odakle dodajete fotografije?", leadTime: "Rok izrade je 1 dan", uploadingTitle: "Šaljemo fotografije", uploadingHint: "Ne zatvarajte stranicu dok se slanje ne završi.", uploadFailTitle: "Slanje nije uspelo", uploadFailBody: "Fotografije nisu sačuvane. Pokušajte ponovo ili nas pozovite — porudžbinu primamo i telefonom.", retry: "Pokušaj ponovo", callUs: "Pozovite nas", promoTitle: "Za porudžbine od 100 ili više fotografija|važe snižene cene:", bulkBadge: "Akcijska cena za 100+ fotografija je primenjena", ticker: "AKCIJA • Poruči 100+ fotografija i ostvari popust •",
+    srcDevice: "Računar ili telefon", close: "Zatvori", pickSource: "Odakle dodajete fotografije?", leadTime: "Rok izrade je 1 dan", sending: "Slanje u toku…", uploadingTitle: "Šaljemo fotografije", uploadingHint: "Ne zatvarajte stranicu dok se slanje ne završi.", uploadFailTitle: "Slanje nije uspelo", uploadFailBody: "Fotografije nisu sačuvane. Pokušajte ponovo ili nas pozovite — porudžbinu primamo i telefonom.", retry: "Pokušaj ponovo", callUs: "Pozovite nas", promoTitle: "Za porudžbine od 100 ili više fotografija|važe snižene cene:", bulkBadge: "Akcijska cena za 100+ fotografija je primenjena", ticker: "AKCIJA • Poruči 100+ fotografija i ostvari popust •",
     socialHelp: "Otvorite naš profil, sačuvajte željene fotografije na svoj telefon ili računar, a zatim ih dodajte preko opcije „Računar ili telefon“.",
     socialOpenIg: "Otvori Instagram", socialOpenFb: "Otvori Facebook",
     pickupNote: "Za Novi Sad i okolinu do 40 km — porudžbinu možete preuzeti lično.",
@@ -418,7 +418,7 @@ const STR = {
     fName: "Full name", phName: "Maria Petrovic", fPhone: "Phone",
     fAddress: "Delivery address", phAddress: "Street and number, city, postal code",
     fNote: "Note", phNote: "",
-    srcDevice: "Computer or phone", close: "Close", pickSource: "Where are the photos from?", leadTime: "Ready in 1 day", uploadingTitle: "Uploading photos", uploadingHint: "Please keep this page open until the upload finishes.", uploadFailTitle: "Upload failed", uploadFailBody: "Your photos were not saved. Please try again or call us — we take orders by phone too.", retry: "Try again", callUs: "Call us", promoTitle: "Orders of 100 photos or more|get reduced prices:", bulkBadge: "Bulk price for 100+ photos applied", ticker: "SALE • Order 100+ photos and get a discount •",
+    srcDevice: "Computer or phone", close: "Close", pickSource: "Where are the photos from?", leadTime: "Ready in 1 day", sending: "Sending…", uploadingTitle: "Uploading photos", uploadingHint: "Please keep this page open until the upload finishes.", uploadFailTitle: "Upload failed", uploadFailBody: "Your photos were not saved. Please try again or call us — we take orders by phone too.", retry: "Try again", callUs: "Call us", promoTitle: "Orders of 100 photos or more|get reduced prices:", bulkBadge: "Bulk price for 100+ photos applied", ticker: "SALE • Order 100+ photos and get a discount •",
     socialHelp: "Open our profile, save the photos you want to your phone or computer, then add them with the “Computer or phone” option.",
     socialOpenIg: "Open Instagram", socialOpenFb: "Open Facebook",
     pickupNote: "For Novi Sad and up to 40 km around — you can collect your order in person.",
@@ -588,6 +588,7 @@ class Component extends DCLogic {
      desktop Chrome/Firefox) the decoder is fetched on demand, the first time
      a HEIC file actually appears — nothing extra loads for JPG users. */
   HEIC_SOURCES = [
+    "./heic2any.min.js",
     "https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js",
     "https://unpkg.com/heic2any@0.0.4/dist/heic2any.min.js"
   ];
@@ -836,7 +837,8 @@ class Component extends DCLogic {
       deliveryFeeLabel: this.dinars(del.fee),
       total: this.dinars(total),
 
-      cannotSubmit: !ready,
+      cannotSubmit: !ready || !!s.uploading,
+      submitLabel: s.uploading ? t.sending : t.submit,
       submitStyle: [
         "border:0;border-radius:999px;padding:17px 24px;font-family:var(--font-body);font-size:17px;font-weight:700;width:100%",
         ready ? "background:#48D1CC;color:#08454a;cursor:pointer;box-shadow:0 8px 22px rgba(72,209,204,.4)"

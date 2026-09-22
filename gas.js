@@ -47,7 +47,9 @@
       .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
       .replace(/[^a-zA-Z0-9._-]/g, '_')
       .replace(/_+/g, '_');
-    if (!/\.jpe?g$/i.test(clean)) clean += '.jpg';
+    /* Everything is JPEG by the time it gets here, so the stored name always
+       ends in .jpg — no "foto.heic.jpg" leftovers. */
+    clean = clean.replace(/\.[a-zA-Z0-9]+$/, '') + '.jpg';
     return String(i + 1).padStart(4, '0') + '-' + clean;
   }
 

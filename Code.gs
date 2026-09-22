@@ -113,8 +113,22 @@ function finalizeOrder(d) {
   var spec = Array.isArray(d.spec) ? d.spec.map(function (n) { return Number(n) || 1; }) : [];
   var copies = spec.reduce(function (a, b) { return a + b; }, 0);
 
+  /* Count what is actually in the folder. The order is only complete when
+     every photo is really there, so a half-finished upload cannot pass. */
+  var expected = spec.length || Number(d.count) || 0;
+  var onDrive = 0;
+  try {
+    var it = DriveApp.getFolderById(d.folderId).getFiles();
+    while (it.hasNext()) { it.next(); onDrive++; }
+  } catch (e) {
+    return { ok: false, error: 'Drive folder nije dostupan' };
+  }
+  if (expected && onDrive < expected) {
+    return { ok: false, error: 'Na Drive-u je ' + onDrive + ' od ' + expected + ' fotografija' };
+  }
+
   var sh = sheet();
-  sh.getRange(r._row, HEADERS.indexOf('photo_count') + 1).setValue(spec.length || Number(d.count) || 0);
+  sh.getRange(r._row, HEADERS.indexOf('photo_count') + 1).setValue(expected);
   if (copies) sh.getRange(r._row, HEADERS.indexOf('copies_total') + 1).setValue(copies);
   sh.getRange(r._row, HEADERS.indexOf('spec') + 1).setValue(JSON.stringify(spec));
 
