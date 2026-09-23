@@ -40,9 +40,24 @@
     return data;
   }
 
+  /* Apps Script answers every call with a redirect to a one-time result URL
+     on googleusercontent.com. When two calls overlap (a poll and a click),
+     or the result URL is fetched a moment late, Google returns 404 for it
+     even though the script itself ran fine. Those are safe to repeat: every
+     admin action here is idempotent (list, photos, status, delete, notify). */
+  async function fetchRetry(url, init) {
+    var res;
+    for (var attempt = 0; attempt < 4; attempt++) {
+      res = await fetch(url, Object.assign({ cache: 'no-store' }, init || {}));
+      if (res.status !== 404 && res.status < 500) return res;
+      await new Promise(function (r) { setTimeout(r, 400 * (attempt + 1)); });
+    }
+    return res;
+  }
+
   async function post(payload) {
     var body = Object.assign({ token: token() }, payload);
-    var res = await fetch(ENDPOINT, {
+    var res = await fetchRetry(ENDPOINT, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify(body)
@@ -54,7 +69,8 @@
     var qs = Object.keys(params).map(function (k) {
       return k + '=' + encodeURIComponent(params[k]);
     }).join('&');
-    var res = await fetch(ENDPOINT + '?' + qs + '&token=' + encodeURIComponent(token()));
+    /* a per-call nonce keeps each GET's result URL distinct */
+    var res = await fetchRetry(ENDPOINT + '?' + qs + '&token=' + encodeURIComponent(token()) + '&_=' + Date.now());
     return parse(res, params.action);
   }
 
