@@ -17,7 +17,7 @@
              copies_total (sum of per-photo copies), total_price,
              status: "novo" | "priprema" | "gotovo", spec, folder_url }      */
 (function () {
-  var ENDPOINT = 'https://script.google.com/macros/s/AKfycbxgAz_RFMiEQjebRM87C6Bm7L6RnAINVsyC_mM8D-vRoGJ1Q_gq4UPzAnU4ui-PQJNZ5A/exec';
+  var ENDPOINT = 'https://script.google.com/macros/s/AKfycby2EHvqj9bgwzAS94HstBHSFWyynRdle8XhLm9XPMJMxilnCJxaIY61Cmro8GHqbpQzIQ/exec';
   var POLL_MS = 15000;
   var KEY = 'ss-admin-token';
 

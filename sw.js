@@ -1,4 +1,4 @@
-const CACHE = 'studio-square-v105';
+const CACHE = 'studio-square-v106';
 const CORE = [
   './',
   './index.html',
@@ -67,7 +67,7 @@ self.addEventListener('fetch', (e) => {
    watch list is written by the page into the cache, because a worker cannot
    read localStorage. */
 
-const ENDPOINT = 'https://script.google.com/macros/s/AKfycbxgAz_RFMiEQjebRM87C6Bm7L6RnAINVsyC_mM8D-vRoGJ1Q_gq4UPzAnU4ui-PQJNZ5A/exec';
+const ENDPOINT = 'https://script.google.com/macros/s/AKfycby2EHvqj9bgwzAS94HstBHSFWyynRdle8XhLm9XPMJMxilnCJxaIY61Cmro8GHqbpQzIQ/exec';
 const WATCH_URL = './__ss_watch';
 
 async function readWatch() {

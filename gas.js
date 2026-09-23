@@ -12,7 +12,7 @@ console.info('SS_BACKEND gas.js v105 učitan');
    web apps do not answer OPTIONS). The endpoint holds no secret: it only
    accepts new orders. Reading orders requires the admin token. */
 (function () {
-  var ENDPOINT = 'https://script.google.com/macros/s/AKfycbxgAz_RFMiEQjebRM87C6Bm7L6RnAINVsyC_mM8D-vRoGJ1Q_gq4UPzAnU4ui-PQJNZ5A/exec';
+  var ENDPOINT = 'https://script.google.com/macros/s/AKfycby2EHvqj9bgwzAS94HstBHSFWyynRdle8XhLm9XPMJMxilnCJxaIY61Cmro8GHqbpQzIQ/exec';
   var RETRIES = 2;
   var CONCURRENCY = 6;
   /* Several photos travel in one request. Each Apps Script call carries a
@@ -119,6 +119,8 @@ console.info('SS_BACKEND gas.js v105 učitan');
           await postRetry({ action: 'photos', id: id, folderId: folderId, items: items });
           return;
         } catch (e) {
+          /* An older backend without the batch action: fall back to single
+             photos for the rest of the order. */
           /* A backend deployed before the batch action existed answers
              "unknown action" — or "unauthorized", because the unknown POST
              falls through to the admin check. Either way: switch to one
@@ -176,4 +178,4 @@ console.info('SS_BACKEND gas.js v105 učitan');
     }).catch(function () {});
 
   window.SS_BACKEND = { submitOrder: submitOrder, orderStatus: orderStatus, endpoint: ENDPOINT };
-})();   
+})();
