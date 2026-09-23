@@ -1,11 +1,15 @@
-const CACHE = 'studio-square-v108';
+try { importScripts('./supabase.js'); } catch (e) {}
+const SB = self.SS_SUPABASE || {};
+
+const CACHE = 'studio-square-v110';
 const CORE = [
   './',
   './index.html',
   './support.js',
   './pwa.js',
   './legacy.js',
-  './gas.js',
+  './supabase.js',
+  './backend.js',
   './manifest.webmanifest',
   './logo.png',
   './icon-192.png',
@@ -67,7 +71,6 @@ self.addEventListener('fetch', (e) => {
    watch list is written by the page into the cache, because a worker cannot
    read localStorage. */
 
-const ENDPOINT = 'https://script.google.com/macros/s/AKfycby2EHvqj9bgwzAS94HstBHSFWyynRdle8XhLm9XPMJMxilnCJxaIY61Cmro8GHqbpQzIQ/exec';
 const WATCH_URL = './__ss_watch';
 
 async function readWatch() {
@@ -93,9 +96,13 @@ async function checkWatched() {
   let changed = false;
   for (const w of open) {
     try {
-      const u = ENDPOINT + '?action=orderstatus&id=' + encodeURIComponent(w.id) +
-                '&phone=' + encodeURIComponent(w.phone);
-      const res = await fetch(u, { cache: 'no-store' });
+      if (!SB.url || !SB.key) return;
+      const res = await fetch(String(SB.url).replace(/\/+$/, '') + '/rest/v1/rpc/order_status', {
+        method: 'POST',
+        cache: 'no-store',
+        headers: { apikey: SB.key, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ p_id: String(w.id), p_phone: String(w.phone || '') })
+      });
       const data = await res.json();
       if (data && data.ok && data.status === 'gotovo') {
         w.told = true;

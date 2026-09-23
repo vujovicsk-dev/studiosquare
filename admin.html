@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<link rel="preconnect" href="https://script.google.com" crossorigin>
+<link rel="preconnect" href="https://puyolmpmuafgmdssxada.supabase.co" crossorigin>
 <meta charset="utf-8">
 <title>Studio Square — porudžbine</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -63,6 +63,7 @@
   }
 </style>
 <script src="./zip.js"></script>
+<script src="./supabase.js"></script>
 <script src="./orders-api.js"></script>
 </helmet>
 
@@ -294,10 +295,12 @@
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:940,&quot;height&quot;:900}}">
 /* Chime shapes: [frequency, start offset, length] per note. */
+/* Notes: [frequency, start offset, length]. Each pattern plays three times
+   (see beep) so a new order is hard to miss in a busy shop. */
 const TONES = {
-  zvono: { label: "Alarm", notes: [[1046, 0, 0.18], [784, 0.2, 0.18], [1046, 0.4, 0.18], [784, 0.6, 0.22]] },
-  meko:  { label: "Sirena", notes: [[660, 0, 0.3], [990, 0.28, 0.3], [660, 0.56, 0.3], [990, 0.84, 0.34]] },
-  kratko:{ label: "Kratko", notes: [[1480, 0, 0.14], [1480, 0.18, 0.18]] }
+  zvono: { label: "Alarm", notes: [[1568, 0, 0.12], [1175, 0.14, 0.12], [1568, 0.28, 0.12], [1175, 0.42, 0.12], [1568, 0.56, 0.2]] },
+  meko:  { label: "Sirena", notes: [[700, 0, 0.35], [1200, 0.35, 0.35], [700, 0.7, 0.35], [1200, 1.05, 0.35]] },
+  kratko:{ label: "Kratko", notes: [[1760, 0, 0.1], [1760, 0.15, 0.1], [1760, 0.3, 0.16]] }
 };
 
 const MONTHS_SR = ["januar", "februar", "mart", "april", "maj", "jun",
@@ -394,7 +397,7 @@ class Component extends DCLogic {
   /* Chime built with WebAudio — no audio file to ship or cache. */
   beep(force) {
     if (!force && !this.state.sound) return;
-    const level = (this.state.volume / 100) * 0.9;
+    const level = (this.state.volume / 100);
     if (level <= 0) return;
     try {
       const AC = window.AudioContext || window.webkitAudioContext;
@@ -402,21 +405,35 @@ class Component extends DCLogic {
       this.ac = this.ac || new AC();
       if (this.ac.state === "suspended") this.ac.resume();
       const tone = TONES[this.state.tone] || TONES.zvono;
-      tone.notes.forEach(([freq, at, len]) => {
-        const t = this.ac.currentTime + at;
-        const osc = this.ac.createOscillator();
-        const gain = this.ac.createGain();
-        /* square through a soft-clipper: carries much further than a sine
-           at the same volume setting, which is the point in a busy shop */
-        osc.type = "square";
-        osc.frequency.setValueAtTime(freq, t);
-        gain.gain.setValueAtTime(0.0001, t);
-        gain.gain.exponentialRampToValueAtTime(level, t + 0.02);
-        gain.gain.exponentialRampToValueAtTime(0.0001, t + len);
-        osc.connect(gain).connect(this.ac.destination);
-        osc.start(t);
-        osc.stop(t + len + 0.02);
-      });
+      /* Two detuned sawtooth voices per note, pushed through a compressor:
+         much louder perceived volume than a single wave at the same level,
+         without clipping into noise. The pattern repeats three times. */
+      const out = this.ac.createDynamicsCompressor();
+      out.threshold.value = -18; out.knee.value = 6; out.ratio.value = 8;
+      out.attack.value = 0.002; out.release.value = 0.12;
+      const master = this.ac.createGain();
+      master.gain.value = 1.6 * level;
+      out.connect(master).connect(this.ac.destination);
+      const span = tone.notes.reduce((m, n) => Math.max(m, n[1] + n[2]), 0) + 0.25;
+      for (let rep = 0; rep < 3; rep++) {
+        tone.notes.forEach(([freq, at, len]) => {
+          const t = this.ac.currentTime + rep * span + at;
+          [0, 7].forEach(detune => {
+            const osc = this.ac.createOscillator();
+            const gain = this.ac.createGain();
+            osc.type = "sawtooth";
+            osc.frequency.setValueAtTime(freq, t);
+            osc.detune.setValueAtTime(detune, t);
+            gain.gain.setValueAtTime(0.0001, t);
+            gain.gain.exponentialRampToValueAtTime(0.5, t + 0.01);
+            gain.gain.setValueAtTime(0.5, t + len * 0.7);
+            gain.gain.exponentialRampToValueAtTime(0.0001, t + len);
+            osc.connect(gain).connect(out);
+            osc.start(t);
+            osc.stop(t + len + 0.02);
+          });
+        });
+      }
     } catch (e) {}
   }
 
@@ -543,7 +560,7 @@ class Component extends DCLogic {
       const fmt = String(order.photo_format).replace(/×/g, "x").replace(/\s+/g, " ").trim();
       const who = String(order.full_name || "Porudzbina " + order.id)
         .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-        .replace(/[^A-Za-z0-9 ]/g, "").replace(/\s+/g, " ").trim().toUpperCase();
+        .replace(/[^A-Za-z0-9 ]/g, "").replace(/\s+/g, " ").trim();
       const base = who + " - " + fmt;
       const zip = await window.SS_ZIP.make(files);
       window.SS_ZIP.save(zip, mode === "stampa" ? base + ".zip" : base + " (originali).zip");

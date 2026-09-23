@@ -1,189 +1,280 @@
-/* Studio Square — orders data source for admin.html.
+/* Studio Square — orders data source for admin.html, on Supabase.
 
-   Backed by the Google Apps Script web app (Sheets + private Drive). The
-   admin password is never in this file: it is posted to the script, which
-   checks it against a script property and returns a token. The token lives
-   in localStorage and is sent with every later request.
+   Same window.SS_ORDERS interface as before, so admin.html is unchanged.
 
-     POST { action:"login", password }        -> { ok, token }
-     GET  ?action=list&token=…                -> { orders: [ …order ] }
-     GET  ?action=photos&id=…&token=…         -> { photos: [ { name, url, copies } ] }
-     POST { action:"status", id, status, token }
-     POST { action:"delete", id, token }      also trashes the Drive folder
-     POST { action:"notify", id, title, body, token }
+   Login: Supabase Auth, email + password. The admin page only asks for the
+   password; the email of the admin account comes from the database
+   (rpc admin_email), so neither is written in this file. After login the
+   account is checked against public.admins — any other account is refused.
 
-   order = { id, created_at (ISO), full_name, phone, address, note,
-             photo_format, photo_count (distinct photos),
-             copies_total (sum of per-photo copies), total_price,
+   Orders come from "orders" with their "order_photos" in the same request.
+   Photos are read from the private "photos" bucket through short-lived
+   signed URLs, all signed in one call; nothing is loaded into memory until
+   the page actually shows or downloads a photo.
+
+   order = { id, created_at, full_name, phone, address, note,
+             photo_format, quantity, photo_count, copies_total, total_price,
              status: "novo" | "priprema" | "gotovo", spec, folder_url }      */
 (function () {
-  var ENDPOINT = 'https://script.google.com/macros/s/AKfycby2EHvqj9bgwzAS94HstBHSFWyynRdle8XhLm9XPMJMxilnCJxaIY61Cmro8GHqbpQzIQ/exec';
+  var CFG = window.SS_SUPABASE || {};
+  var URL_ = String(CFG.url || '').replace(/\/+$/, '');
+  var KEY = CFG.key || '';
   var POLL_MS = 15000;
-  var KEY = 'ss-admin-token';
+  var SESSION = 'ss-admin-session';
+  var EMAIL = 'ss-admin-email';
+  var SIGN_SECONDS = 60 * 60;
 
-  function token() {
-    try { return localStorage.getItem(KEY) || ''; } catch (e) { return ''; }
+  function readSession() {
+    try { return JSON.parse(localStorage.getItem(SESSION) || 'null'); } catch (e) { return null; }
+  }
+  function writeSession(s) {
+    try {
+      if (s) localStorage.setItem(SESSION, JSON.stringify(s));
+      else localStorage.removeItem(SESSION);
+    } catch (e) {
+      throw new Error('Pregledač blokira localStorage — isključite privatni režim ili blokadu kolačića.');
+    }
+  }
+  function fromAuth(data) {
+    return {
+      access_token: data.access_token,
+      refresh_token: data.refresh_token,
+      expires_at: Date.now() + (Number(data.expires_in) || 3600) * 1000
+    };
   }
 
-  /* Apps Script answers authorization and runtime problems with an HTML page,
-     not JSON, so parse defensively and report what actually came back. */
-  async function parse(res, what) {
-    var txt = await res.text();
-    if (!res.ok) throw new Error(what + ': server ' + res.status);
-    var data;
-    try { data = JSON.parse(txt); }
-    catch (e) {
-      console.error('SS_ORDERS ' + what + ' — odgovor nije JSON:', txt.slice(0, 400));
-      throw new Error(what + ': server nije vratio JSON (verovatno Apps Script nije autorizovan — otvorite skriptu i pokrenite je jednom ručno).');
-    }
-    if (!data.ok) throw new Error(data.error || (what + ': greška na serveru'));
-    return data;
+  async function readError(res) {
+    var txt = '';
+    try { txt = await res.text(); } catch (e) {}
+    try { var j = JSON.parse(txt); return j.message || j.error_description || j.msg || j.error || txt; }
+    catch (e) { return txt || ('HTTP ' + res.status); }
   }
 
-  /* Apps Script answers every call with a redirect to a one-time result URL
-     on googleusercontent.com. When two calls overlap (a poll and a click),
-     or the result URL is fetched a moment late, Google returns 404 for it
-     even though the script itself ran fine. Those are safe to repeat: every
-     admin action here is idempotent (list, photos, status, delete, notify). */
-  async function fetchRetry(url, init) {
-    var res;
-    for (var attempt = 0; attempt < 4; attempt++) {
-      res = await fetch(url, Object.assign({ cache: 'no-store' }, init || {}));
-      if (res.status !== 404 && res.status < 500) return res;
-      await new Promise(function (r) { setTimeout(r, 400 * (attempt + 1)); });
+  async function auth(path, body) {
+    var res = await fetch(URL_ + '/auth/v1/' + path, {
+      method: 'POST',
+      headers: { apikey: KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) {
+      var msg = await readError(res);
+      var err = new Error(/invalid login|invalid_grant/i.test(msg) ? 'Pogrešna lozinka' : msg);
+      err.status = res.status;
+      throw err;
     }
+    return res.json();
+  }
+
+  /* A valid access token, refreshed shortly before it runs out. */
+  var refreshing = null;
+  async function accessToken() {
+    var s = readSession();
+    if (!s) throw new Error('unauthorized');
+    if (Date.now() < s.expires_at - 60000) return s.access_token;
+    if (!refreshing) {
+      refreshing = auth('token?grant_type=refresh_token', { refresh_token: s.refresh_token })
+        .then(function (d) { writeSession(fromAuth(d)); return d.access_token; })
+        .catch(function () { writeSession(null); throw new Error('unauthorized'); })
+        .finally(function () { refreshing = null; });
+    }
+    return refreshing;
+  }
+
+  /* Authenticated call; a 401 once triggers a refresh and one retry. */
+  async function api(path, init, retried) {
+    var tok = await accessToken();
+    var opts = Object.assign({}, init || {});
+    opts.headers = Object.assign({ apikey: KEY, Authorization: 'Bearer ' + tok }, opts.headers || {});
+    var res = await fetch(URL_ + path, opts);
+    if (res.status === 401 && !retried) {
+      var s = readSession();
+      if (s) { s.expires_at = 0; writeSession(s); }
+      return api(path, init, true);
+    }
+    if (res.status === 401) { writeSession(null); throw new Error('unauthorized'); }
+    if (!res.ok) throw new Error(await readError(res));
     return res;
   }
 
-  async function post(payload) {
-    var body = Object.assign({ token: token() }, payload);
-    var res = await fetchRetry(ENDPOINT, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify(body)
+  async function adminEmail() {
+    try { var cached = localStorage.getItem(EMAIL); if (cached) return cached; } catch (e) {}
+    var res = await fetch(URL_ + '/rest/v1/rpc/admin_email', {
+      method: 'POST', headers: { apikey: KEY, 'Content-Type': 'application/json' }, body: '{}'
     });
-    return parse(res, payload.action);
-  }
-
-  async function get(params) {
-    var qs = Object.keys(params).map(function (k) {
-      return k + '=' + encodeURIComponent(params[k]);
-    }).join('&');
-    /* a per-call nonce keeps each GET's result URL distinct */
-    var res = await fetchRetry(ENDPOINT + '?' + qs + '&token=' + encodeURIComponent(token()) + '&_=' + Date.now());
-    return parse(res, params.action);
+    if (!res.ok) throw new Error(await readError(res));
+    var email = await res.json();
+    if (!email) throw new Error('Admin nalog nije podešen u bazi (public.admins).');
+    try { localStorage.setItem(EMAIL, email); } catch (e) {}
+    return email;
   }
 
   async function login(password) {
-    var res = await fetch(ENDPOINT, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action: 'login', password: password })
-    });
-    var data = await parse(res, 'login');
-    if (!data.token) throw new Error('Server nije vratio token — ponovo deploy-ujte Apps Script.');
-    try { localStorage.setItem(KEY, data.token); }
-    catch (e) { throw new Error('Pregledač blokira localStorage — isključite privatni režim ili blokadu kolačića.'); }
-    if (!token()) throw new Error('Token nije sačuvan u pregledaču.');
-    /* The login reply already carries the first page of orders, so the admin
-       opens on one round trip instead of two. */
-    if (data.orders) preloaded = data.orders;
-    console.info('SS_ORDERS: prijava uspešna, token dužine', data.token.length);
-    return { ok: true, orders: data.orders || null };
+    if (!URL_ || !KEY || /UNESITE/.test(KEY)) throw new Error('Supabase nije podešen (supabase.js).');
+    var email = await adminEmail();
+    var data;
+    try {
+      data = await auth('token?grant_type=password', { email: email, password: password });
+    } catch (e) {
+      /* the admin account may have changed — look the email up again once */
+      try { localStorage.removeItem(EMAIL); } catch (x) {}
+      var fresh = await adminEmail();
+      if (fresh === email) throw e;
+      data = await auth('token?grant_type=password', { email: fresh, password: password });
+    }
+    writeSession(fromAuth(data));
+
+    /* Admin check and the first list in parallel: one round trip of waiting. */
+    var both = await Promise.all([
+      api('/rest/v1/rpc/is_admin', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })
+        .then(function (r) { return r.json(); }),
+      fetchOrders()
+    ]);
+    if (both[0] !== true) {
+      writeSession(null);
+      throw new Error('Ovaj nalog nema pristup adminu.');
+    }
+    preloaded = both[1];
+    return { ok: true, orders: both[1] };
   }
 
   function logout() {
-    try { localStorage.removeItem(KEY); } catch (e) {}
+    var s = readSession();
+    writeSession(null);
+    if (s && s.access_token) {
+      fetch(URL_ + '/auth/v1/logout', { method: 'POST', headers: { apikey: KEY, Authorization: 'Bearer ' + s.access_token } })
+        .catch(function () {});
+    }
+  }
+
+  /* ---- orders ---- */
+
+  var byId = {};
+
+  function toOrder(r) {
+    var photos = (r.order_photos || []).slice().sort(function (a, b) {
+      return a.file_path < b.file_path ? -1 : a.file_path > b.file_path ? 1 : 0;
+    });
+    var spec = photos.map(function (p) { return Number(p.copies) || 1; });
+    var sum = spec.reduce(function (a, b) { return a + b; }, 0);
+    var o = {
+      id: String(r.id),
+      created_at: r.created_at,
+      full_name: r.full_name || '',
+      phone: r.phone || '',
+      address: r.address || '',
+      note: r.note || '',
+      photo_format: r.format || '',
+      quantity: Number(r.quantity) || 0,
+      photo_count: Number(r.photo_count) || photos.length,
+      copies_total: Number(r.copies_total) || Number(r.quantity) || sum,
+      total_price: Number(r.total_price) || 0,
+      status: r.status || 'novo',
+      spec: spec,
+      folder_url: ''
+    };
+    byId[o.id] = { order: o, photos: photos };
+    return o;
+  }
+
+  async function fetchOrders() {
+    var res = await api('/rest/v1/orders?select=*,order_photos(id,file_path,file_name,copies)' +
+      '&status=neq.upload&order=created_at.desc');
+    return (await res.json()).map(toOrder);
   }
 
   var preloaded = null;
-
-  /* TEMP diagnostics — remove once photos show correctly. */
-  function logOrders(src, orders, dbg) {
-    console.groupCollapsed('SS_ORDERS [' + src + '] ' + (orders || []).length + ' porudžbina');
-    if (dbg) console.info('sheet:', dbg.sheet, '| kolone:', dbg.columns);
-    (orders || []).forEach(function (x) {
-      console.info('order', x.id, '| folder:', x.folder_id || '(prazno)',
-        '| fotografija:', x.photo_count, '| komada:', x.copies_total, '| spec:', x.spec);
-    });
-    console.groupEnd();
-  }
-
   async function list() {
-    if (preloaded) { var first = preloaded; preloaded = null; logOrders('login', first); return first; }
-    var data = await get({ action: 'list' });
-    logOrders('list', data.orders, data._debug);
-    return data.orders || [];
+    if (preloaded) { var first = preloaded; preloaded = null; return first; }
+    return fetchOrders();
   }
 
-  function b64ToBlob(b64, mime) {
-    var bin = atob(b64), n = bin.length, bytes = new Uint8Array(n);
-    for (var i = 0; i < n; i++) bytes[i] = bin.charCodeAt(i);
-    return new Blob([bytes], { type: mime || 'image/jpeg' });
-  }
+  /* ---- photos: signed URLs from the private bucket ---- */
 
-  /* Lists the order's folder, then pulls each photo on its own call (four at
-     a time). Each photo becomes a local blob: URL, so the thumbnails, the
-     single downloads and the ZIP all use the real JPG from Drive. */
   var photoCache = {};
   var photoLoading = {};
+
   function listPhotos(order) {
-    if (photoCache[order.id]) return Promise.resolve(photoCache[order.id]);
+    var hit = photoCache[order.id];
+    if (hit && Date.now() < hit.until) return Promise.resolve(hit.list);
     if (!photoLoading[order.id]) {
       photoLoading[order.id] = loadPhotos(order).finally(function () { delete photoLoading[order.id]; });
     }
     return photoLoading[order.id];
   }
+
+  async function photoRows(id) {
+    if (byId[id] && byId[id].photos.length) return byId[id].photos;
+    var res = await api('/rest/v1/order_photos?select=id,file_path,file_name,copies&order_id=eq.' +
+      encodeURIComponent(id) + '&order=file_path.asc');
+    return res.json();
+  }
+
   async function loadPhotos(order) {
-    var data = await get({ action: 'photos', id: order.id });
-    console.info('SS_ORDERS photos | order:', data.orderId || order.id, '| Drive folder:', data.folderId,
-      '| fajlova:', data.filesFound, '| komada:', data.copiesTotal, '| odgovor:', data);
-    var items = data.photos || [];
-    var out = new Array(items.length), next = 0;
+    var rows = await photoRows(order.id);
+    if (!rows.length) { photoCache[order.id] = { list: [], until: Date.now() + 30000 }; return []; }
 
-    async function worker() {
-      while (next < items.length) {
-        var i = next++, p = items[i];
-        var f = await get({ action: 'file', id: order.id, fileId: p.fileId });
-        out[i] = {
-          name: p.name,
-          copies: p.copies || 1,
-          fileId: p.fileId,
-          url: URL.createObjectURL(b64ToBlob(f.data, f.mime))
-        };
-      }
-    }
-    var running = [];
-    for (var w = 0; w < Math.min(4, items.length); w++) running.push(worker());
-    await Promise.all(running);
+    /* every photo of the order signed in one request */
+    var res = await api('/storage/v1/object/sign/photos', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ expiresIn: SIGN_SECONDS, paths: rows.map(function (r) { return r.file_path; }) })
+    });
+    var signed = await res.json();
+    var urlByPath = {};
+    (signed || []).forEach(function (s) {
+      var u = s.signedURL || s.signedUrl;
+      if (u) urlByPath[s.path] = /^https?:/.test(u) ? u : URL_ + '/storage/v1' + u;
+    });
 
-    console.info('SS_ORDERS: porudžbina', order.id, '— fotografija na Drive-u:', out.length);
-    photoCache[order.id] = out;
+    var out = rows.map(function (r) {
+      return {
+        name: r.file_name || r.file_path.split('/').pop(),
+        copies: Number(r.copies) || 1,
+        fileId: r.file_path,
+        url: urlByPath[r.file_path] || ''
+      };
+    }).filter(function (p) { return p.url; });
+
+    photoCache[order.id] = { list: out, until: Date.now() + (SIGN_SECONDS - 300) * 1000 };
     return out;
   }
 
   async function setStatus(id, status) {
-    return post({ action: 'status', id: id, status: status });
+    await api('/rest/v1/orders?id=eq.' + encodeURIComponent(id), {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+      body: JSON.stringify({ status: status })
+    });
+    return { ok: true };
   }
 
+  /* Deletes the photos in Storage, their rows, then the order. */
   async function remove(id) {
-    return post({ action: 'delete', id: id });
+    var rows = await photoRows(id);
+    var paths = rows.map(function (r) { return r.file_path; });
+    for (var i = 0; i < paths.length; i += 100) {
+      await api('/storage/v1/object/photos', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prefixes: paths.slice(i, i + 100) })
+      });
+    }
+    await api('/rest/v1/order_photos?order_id=eq.' + encodeURIComponent(id), { method: 'DELETE', headers: { Prefer: 'return=minimal' } });
+    await api('/rest/v1/orders?id=eq.' + encodeURIComponent(id), { method: 'DELETE', headers: { Prefer: 'return=minimal' } });
+    delete byId[id];
+    delete photoCache[id];
+    return { ok: true };
   }
 
-  /* Tells the shop's backend the order is done, and shows the browser
-     notification locally so the wording can be checked on the spot. */
+  /* The customer's app picks up "gotovo" by itself (backend.js / sw.js);
+     here the admin just sees the same notice locally. */
   async function notifyReady(order) {
     var title = 'Studio Square';
     var body = '📸 Vaše fotografije su gotove! Porudžbina #' + order.id + ' je spremna za preuzimanje.';
-
-    try { await post({ action: 'notify', id: order.id, title: title, body: body }); }
-    catch (e) { console.error('notify:', e); }
-
     if (!('Notification' in window)) return { shown: false, body: body };
     var perm = Notification.permission;
     if (perm === 'default') perm = await Notification.requestPermission();
     if (perm !== 'granted') return { shown: false, body: body };
-
     var opts = { body: body, icon: './icon-192.png', badge: './icon-192.png', tag: 'order-' + order.id };
     try {
       var reg = navigator.serviceWorker && await navigator.serviceWorker.getRegistration();
@@ -197,9 +288,9 @@
   }
 
   window.SS_ORDERS = {
-    endpoint: ENDPOINT,
+    endpoint: URL_ + '/auth/v1/health',
     login: login, logout: logout,
-    isAuthed: function () { return !!token(); },
+    isAuthed: function () { return !!readSession(); },
     list: list, listPhotos: listPhotos, setStatus: setStatus,
     remove: remove, notifyReady: notifyReady,
     pollMs: POLL_MS, isMock: false
