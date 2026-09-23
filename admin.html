@@ -339,16 +339,26 @@ class Component extends DCLogic {
     } catch (e) {}
 
     this.refresh(true);
-    this.timer = setInterval(() => this.refresh(false), (window.SS_ORDERS && window.SS_ORDERS.pollMs) || 8000);
+    /* Poll only while the admin tab is visible; catch up the moment it is
+       shown again. A hidden tab polling every 15 s was pure waste, and it
+       collided with clicks on the same Apps Script endpoint. */
+    this.timer = setInterval(() => { if (!document.hidden) this.refresh(false); },
+      (window.SS_ORDERS && window.SS_ORDERS.pollMs) || 8000);
+    this.onVisible = () => { if (!document.hidden) this.refresh(false); };
+    document.addEventListener("visibilitychange", this.onVisible);
   }
 
   componentWillUnmount() {
     clearInterval(this.timer);
     clearTimeout(this.toastTimer);
+    document.removeEventListener("visibilitychange", this.onVisible);
   }
 
   async refresh(first) {
     if (!window.SS_ORDERS || !window.SS_ORDERS.isAuthed()) return;
+    /* One list call at a time: a slow reply must not stack up behind itself. */
+    if (this.listing) return;
+    this.listing = true;
     let orders;
     try { orders = await window.SS_ORDERS.list(); }
     catch (e) {
@@ -362,6 +372,8 @@ class Component extends DCLogic {
         this.setState({ loaded: true, toast: "Porudžbine nisu učitane: " + String(e.message || e) });
       }
       return;
+    } finally {
+      this.listing = false;
     }
 
     const known = this.state.orders.map(o => o.id);

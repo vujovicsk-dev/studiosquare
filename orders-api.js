@@ -126,8 +126,15 @@
      a time). Each photo becomes a local blob: URL, so the thumbnails, the
      single downloads and the ZIP all use the real JPG from Drive. */
   var photoCache = {};
-  async function listPhotos(order) {
-    if (photoCache[order.id]) return photoCache[order.id];
+  var photoLoading = {};
+  function listPhotos(order) {
+    if (photoCache[order.id]) return Promise.resolve(photoCache[order.id]);
+    if (!photoLoading[order.id]) {
+      photoLoading[order.id] = loadPhotos(order).finally(function () { delete photoLoading[order.id]; });
+    }
+    return photoLoading[order.id];
+  }
+  async function loadPhotos(order) {
     var data = await get({ action: 'photos', id: order.id });
     console.info('SS_ORDERS photos | order:', data.orderId || order.id, '| Drive folder:', data.folderId,
       '| fajlova:', data.filesFound, '| komada:', data.copiesTotal, '| odgovor:', data);

@@ -1,5 +1,5 @@
 /* TEMP: version marker — remove once uploads are confirmed working. */
-console.info('SS_BACKEND gas.js v107 učitan');
+console.info('SS_BACKEND gas.js v108 učitan');
 /* Studio Square — Google Apps Script backend (customer side).
    Exposes window.SS_BACKEND.submitOrder(order, photos, onProgress).
 
@@ -199,16 +199,6 @@ console.info('SS_BACKEND gas.js v107 učitan');
     var r = await fetch(u);
     return await r.json();
   }
-
-  /* TEMP: tells which Code.gs is actually live. An up-to-date backend
-     answers "orderstatus" with "nepoznata porudžbina"; an old one says
-     "unauthorized" because it does not know that action. */
-  fetch(ENDPOINT + '?action=orderstatus&id=0&phone=0', { cache: 'no-store' })
-    .then(function (r) { return r.json(); })
-    .then(function (d) {
-      if (d && d.error === 'unauthorized') console.warn('SS_BACKEND: objavljeni Code.gs je STARA verzija (nema orderstatus / paketno slanje / file).');
-      else console.info('SS_BACKEND: objavljeni Code.gs je nova verzija.');
-    }).catch(function () {});
 
   window.SS_BACKEND = { submitOrder: submitOrder, orderStatus: orderStatus, endpoint: ENDPOINT };
 })();
