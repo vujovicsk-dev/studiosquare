@@ -104,9 +104,41 @@
     return data.orders || [];
   }
 
+  function b64ToBlob(b64, mime) {
+    var bin = atob(b64), n = bin.length, bytes = new Uint8Array(n);
+    for (var i = 0; i < n; i++) bytes[i] = bin.charCodeAt(i);
+    return new Blob([bytes], { type: mime || 'image/jpeg' });
+  }
+
+  /* Lists the order's folder, then pulls each photo on its own call (four at
+     a time). Each photo becomes a local blob: URL, so the thumbnails, the
+     single downloads and the ZIP all use the real JPG from Drive. */
+  var photoCache = {};
   async function listPhotos(order) {
+    if (photoCache[order.id]) return photoCache[order.id];
     var data = await get({ action: 'photos', id: order.id });
-    return data.photos || [];
+    var items = data.photos || [];
+    var out = new Array(items.length), next = 0;
+
+    async function worker() {
+      while (next < items.length) {
+        var i = next++, p = items[i];
+        var f = await get({ action: 'file', id: order.id, fileId: p.fileId });
+        out[i] = {
+          name: p.name,
+          copies: p.copies || 1,
+          fileId: p.fileId,
+          url: URL.createObjectURL(b64ToBlob(f.data, f.mime))
+        };
+      }
+    }
+    var running = [];
+    for (var w = 0; w < Math.min(4, items.length); w++) running.push(worker());
+    await Promise.all(running);
+
+    console.info('SS_ORDERS: porudžbina', order.id, '— fotografija na Drive-u:', out.length);
+    photoCache[order.id] = out;
+    return out;
   }
 
   async function setStatus(id, status) {
