@@ -1,5 +1,5 @@
 /* TEMP: version marker — remove once uploads are confirmed working. */
-console.info('SS_BACKEND gas.js v105 učitan');
+console.info('SS_BACKEND gas.js v107 učitan');
 /* Studio Square — Google Apps Script backend (customer side).
    Exposes window.SS_BACKEND.submitOrder(order, photos, onProgress).
 
@@ -14,7 +14,9 @@ console.info('SS_BACKEND gas.js v105 učitan');
 (function () {
   var ENDPOINT = 'https://script.google.com/macros/s/AKfycby2EHvqj9bgwzAS94HstBHSFWyynRdle8XhLm9XPMJMxilnCJxaIY61Cmro8GHqbpQzIQ/exec';
   var RETRIES = 2;
-  var CONCURRENCY = 6;
+  /* Two at a time. Six parallel ~6.5 MB requests each took over two minutes
+     and left every one of them exposed to a dropped phone connection. */
+  var CONCURRENCY = 2;
   /* Several photos travel in one request. Each Apps Script call carries a
      fixed start-up cost of a second or more, so fewer, fuller requests are
      the biggest speed-up available. Batches stay well under the 50 MB limit. */
@@ -22,7 +24,38 @@ console.info('SS_BACKEND gas.js v105 učitan');
   var BATCH_MAX = 6;
   var batching = true;
 
+  /* TEMP trace — remove once uploads are confirmed working. */
+  var lastOk = null;
+  function label(p) {
+    if (p.action === 'photo') return 'photo #' + (p.index + 1);
+    if (p.action === 'photos') return 'photos [' + (p.items || []).map(function (x) { return x.index + 1; }).join(',') + ']';
+    return p.action;
+  }
+  function kind(msg) {
+    if (/failed to fetch|load failed|networkerror|network request failed/i.test(msg)) return 'VEZA PREKINUTA (' + msg + ')';
+    if (/^server 5\d\d/.test(msg)) return 'GOOGLE SERVER ' + msg;
+    if (/^server \d+/.test(msg)) return 'HTTP ' + msg;
+    return 'SKRIPTA JE ODBILA: ' + msg;
+  }
+
   function post(payload) {
+    var name = label(payload);
+    var mb = (JSON.stringify(payload).length / 1048576).toFixed(2);
+    var t0 = Date.now();
+    console.info('SS_BACKEND → ' + name + ' (' + mb + ' MB)');
+    return postRaw(payload).then(function (data) {
+      lastOk = name;
+      console.info('SS_BACKEND ✓ ' + name + ' za ' + ((Date.now() - t0) / 1000).toFixed(1) + ' s', data);
+      return data;
+    }, function (e) {
+      var msg = String((e && e.message) || e);
+      console.error('SS_BACKEND ✗ ' + name + ' posle ' + ((Date.now() - t0) / 1000).toFixed(1) + ' s — ' + kind(msg) +
+        ' | poslednji uspešan: ' + (lastOk || 'nijedan'));
+      throw e;
+    });
+  }
+
+  function postRaw(payload) {
     return fetch(ENDPOINT, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
