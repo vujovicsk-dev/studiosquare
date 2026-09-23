@@ -1,3 +1,5 @@
+/* TEMP: version marker — remove once uploads are confirmed working. */
+console.info('SS_BACKEND gas.js v105 učitan');
 /* Studio Square — Google Apps Script backend (customer side).
    Exposes window.SS_BACKEND.submitOrder(order, photos, onProgress).
 
@@ -43,7 +45,13 @@
     var last;
     for (var attempt = 0; attempt <= RETRIES; attempt++) {
       try { return await post(payload); }
-      catch (e) { last = e; await new Promise(function (r) { setTimeout(r, 600 * (attempt + 1)); }); }
+      catch (e) {
+        last = e;
+        /* a definite "no" from the script will not change on retry */
+        if (/unknown action|unauthorized/i.test(String(e.message))) throw e;
+        console.warn('SS_BACKEND:', payload.action, 'pokušaj', attempt + 1, 'nije uspeo —', e.message);
+        await new Promise(function (r) { setTimeout(r, 600 * (attempt + 1)); });
+      }
     }
     throw last;
   }
@@ -111,10 +119,14 @@
           await postRetry({ action: 'photos', id: id, folderId: folderId, items: items });
           return;
         } catch (e) {
-          /* An older backend without the batch action: fall back to single
-             photos for the rest of the order. */
-          if (/unknown action/i.test(String(e.message))) batching = false;
-          else throw e;
+          /* A backend deployed before the batch action existed answers
+             "unknown action" — or "unauthorized", because the unknown POST
+             falls through to the admin check. Either way: switch to one
+             photo per request for the rest of the order. */
+          if (/unknown action|unauthorized/i.test(String(e.message))) {
+            console.warn('SS_BACKEND: paketno slanje nije dostupno na serveru, šaljem pojedinačno.', e.message);
+            batching = false;
+          } else throw e;
         }
       }
       for (var m = 0; m < idx.length; m++) await sendOne(idx[m]);
@@ -130,7 +142,13 @@
     }
     var running = [];
     for (var w = 0; w < Math.min(CONCURRENCY, batches.length); w++) running.push(worker());
-    await Promise.all(running);
+    try {
+      await Promise.all(running);
+    } catch (e) {
+      console.error('SS_BACKEND: upload fotografija nije uspeo — porudžbina', id, '|', e && e.message, e);
+      throw e;
+    }
+    console.info('SS_BACKEND: uploadovano', done, 'od', photos.length, 'fotografija — porudžbina', id);
 
     await postRetry({
       action: 'finalize', id: id, folderId: folderId, count: photos.length,
@@ -147,5 +165,15 @@
     return await r.json();
   }
 
+  /* TEMP: tells which Code.gs is actually live. An up-to-date backend
+     answers "orderstatus" with "nepoznata porudžbina"; an old one says
+     "unauthorized" because it does not know that action. */
+  fetch(ENDPOINT + '?action=orderstatus&id=0&phone=0', { cache: 'no-store' })
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      if (d && d.error === 'unauthorized') console.warn('SS_BACKEND: objavljeni Code.gs je STARA verzija (nema orderstatus / paketno slanje / file).');
+      else console.info('SS_BACKEND: objavljeni Code.gs je nova verzija.');
+    }).catch(function () {});
+
   window.SS_BACKEND = { submitOrder: submitOrder, orderStatus: orderStatus, endpoint: ENDPOINT };
-})();
+})();   
