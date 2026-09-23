@@ -12,7 +12,7 @@
 (function (g) {
   g.SS_SUPABASE = {
     url: 'https://puyolmpmuafgmdssxada.supabase.co',
-    key: 'sb_publishable_UNESITE_VAS_KLJUC'
+    key: 'sb_publishable_fo1XGQNvf0QhMldB6D_MXA_ZvgzVMkR'
   };
   if (/UNESITE/.test(g.SS_SUPABASE.key) && g.console) {
     console.error('supabase.js: unesite Supabase Publishable key (sb_publishable_…).');
