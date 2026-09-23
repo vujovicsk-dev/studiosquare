@@ -12,7 +12,13 @@
 (function () {
   var ENDPOINT = 'https://script.google.com/macros/s/AKfycbxgAz_RFMiEQjebRM87C6Bm7L6RnAINVsyC_mM8D-vRoGJ1Q_gq4UPzAnU4ui-PQJNZ5A/exec';
   var RETRIES = 2;
-  var CONCURRENCY = 8;
+  var CONCURRENCY = 6;
+  /* Several photos travel in one request. Each Apps Script call carries a
+     fixed start-up cost of a second or more, so fewer, fuller requests are
+     the biggest speed-up available. Batches stay well under the 50 MB limit. */
+  var BATCH_BYTES = 8 * 1024 * 1024;
+  var BATCH_MAX = 6;
+  var batching = true;
 
   function post(payload) {
     return fetch(ENDPOINT, {
@@ -73,22 +79,57 @@
     var id = created.id;
     var folderId = created.folderId;
 
+    /* Group photos into batches by size. */
+    var batches = [], cur = [], curBytes = 0;
+    photos.forEach(function (p, i) {
+      var sz = (p.file && p.file.size) || 0;
+      if (cur.length && (cur.length >= BATCH_MAX || curBytes + sz > BATCH_BYTES)) {
+        batches.push(cur); cur = []; curBytes = 0;
+      }
+      cur.push(i); curBytes += sz;
+    });
+    if (cur.length) batches.push(cur);
+
     var next = 0, done = 0;
+
+    async function sendOne(i) {
+      var p = photos[i];
+      await postRetry({
+        action: 'photo', id: id, folderId: folderId, index: i,
+        name: safeName(p.name, i), mime: 'image/jpeg', data: await toBase64(p.file)
+      });
+    }
+
+    async function sendBatch(idx) {
+      if (batching && idx.length > 1) {
+        var items = [];
+        for (var k = 0; k < idx.length; k++) {
+          var p = photos[idx[k]];
+          items.push({ index: idx[k], name: safeName(p.name, idx[k]), mime: 'image/jpeg', data: await toBase64(p.file) });
+        }
+        try {
+          await postRetry({ action: 'photos', id: id, folderId: folderId, items: items });
+          return;
+        } catch (e) {
+          /* An older backend without the batch action: fall back to single
+             photos for the rest of the order. */
+          if (/unknown action/i.test(String(e.message))) batching = false;
+          else throw e;
+        }
+      }
+      for (var m = 0; m < idx.length; m++) await sendOne(idx[m]);
+    }
+
     async function worker() {
-      while (next < photos.length) {
-        var i = next++;
-        var p = photos[i];
-        var b64 = await toBase64(p.file);
-        await postRetry({
-          action: 'photo', id: id, folderId: folderId, index: i,
-          name: safeName(p.name, i), mime: 'image/jpeg', data: b64
-        });
-        done++;
+      while (next < batches.length) {
+        var b = batches[next++];
+        await sendBatch(b);
+        done += b.length;
         if (onProgress) onProgress(done, photos.length);
       }
     }
     var running = [];
-    for (var w = 0; w < Math.min(CONCURRENCY, photos.length); w++) running.push(worker());
+    for (var w = 0; w < Math.min(CONCURRENCY, batches.length); w++) running.push(worker());
     await Promise.all(running);
 
     await postRetry({

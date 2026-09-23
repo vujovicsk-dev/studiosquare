@@ -3,7 +3,7 @@
    Backed by the Google Apps Script web app (Sheets + private Drive). The
    admin password is never in this file: it is posted to the script, which
    checks it against a script property and returns a token. The token lives
-   in sessionStorage and is sent with every later request.
+   in localStorage and is sent with every later request.
 
      POST { action:"login", password }        -> { ok, token }
      GET  ?action=list&token=…                -> { orders: [ …order ] }
@@ -22,7 +22,7 @@
   var KEY = 'ss-admin-token';
 
   function token() {
-    try { return sessionStorage.getItem(KEY) || ''; } catch (e) { return ''; }
+    try { return localStorage.getItem(KEY) || ''; } catch (e) { return ''; }
   }
 
   /* Apps Script answers authorization and runtime problems with an HTML page,
@@ -66,8 +66,8 @@
     });
     var data = await parse(res, 'login');
     if (!data.token) throw new Error('Server nije vratio token — ponovo deploy-ujte Apps Script.');
-    try { sessionStorage.setItem(KEY, data.token); }
-    catch (e) { throw new Error('Pregledač blokira sessionStorage — isključite privatni režim ili blokadu kolačića.'); }
+    try { localStorage.setItem(KEY, data.token); }
+    catch (e) { throw new Error('Pregledač blokira localStorage — isključite privatni režim ili blokadu kolačića.'); }
     if (!token()) throw new Error('Token nije sačuvan u pregledaču.');
     /* The login reply already carries the first page of orders, so the admin
        opens on one round trip instead of two. */
@@ -77,7 +77,7 @@
   }
 
   function logout() {
-    try { sessionStorage.removeItem(KEY); } catch (e) {}
+    try { localStorage.removeItem(KEY); } catch (e) {}
   }
 
   var preloaded = null;

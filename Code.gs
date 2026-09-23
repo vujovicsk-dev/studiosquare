@@ -104,6 +104,16 @@ function savePhoto(p) {
   return { ok: true };
 }
 
+/* Several photos in one call — same result as savePhoto, far fewer
+   round trips. The folder is looked up once for the whole batch. */
+function savePhotos(d) {
+  var folder = DriveApp.getFolderById(d.folderId);
+  (d.items || []).forEach(function (p) {
+    folder.createFile(Utilities.newBlob(Utilities.base64Decode(p.data), p.mime || 'image/jpeg', p.name));
+  });
+  return { ok: true, saved: (d.items || []).length };
+}
+
 /* One sheet write for the whole order: how many distinct photos, how many
    prints in total, and the copies per photo. */
 function finalizeOrder(d) {
@@ -234,6 +244,7 @@ function doPost(e) {
 
     if (a === 'create') return json(createOrder(d.order || {}));
     if (a === 'photo') return json(savePhoto(d));
+    if (a === 'photos') return json(savePhotos(d));
     if (a === 'finalize') return json(finalizeOrder(d));
 
     if (a === 'login') {
