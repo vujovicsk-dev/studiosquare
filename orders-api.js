@@ -98,9 +98,21 @@
 
   var preloaded = null;
 
+  /* TEMP diagnostics — remove once photos show correctly. */
+  function logOrders(src, orders, dbg) {
+    console.groupCollapsed('SS_ORDERS [' + src + '] ' + (orders || []).length + ' porudžbina');
+    if (dbg) console.info('sheet:', dbg.sheet, '| kolone:', dbg.columns);
+    (orders || []).forEach(function (x) {
+      console.info('order', x.id, '| folder:', x.folder_id || '(prazno)',
+        '| fotografija:', x.photo_count, '| komada:', x.copies_total, '| spec:', x.spec);
+    });
+    console.groupEnd();
+  }
+
   async function list() {
-    if (preloaded) { var first = preloaded; preloaded = null; return first; }
+    if (preloaded) { var first = preloaded; preloaded = null; logOrders('login', first); return first; }
     var data = await get({ action: 'list' });
+    logOrders('list', data.orders, data._debug);
     return data.orders || [];
   }
 
@@ -117,6 +129,8 @@
   async function listPhotos(order) {
     if (photoCache[order.id]) return photoCache[order.id];
     var data = await get({ action: 'photos', id: order.id });
+    console.info('SS_ORDERS photos | order:', data.orderId || order.id, '| Drive folder:', data.folderId,
+      '| fajlova:', data.filesFound, '| komada:', data.copiesTotal, '| odgovor:', data);
     var items = data.photos || [];
     var out = new Array(items.length), next = 0;
 
