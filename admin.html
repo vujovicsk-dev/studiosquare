@@ -542,8 +542,29 @@ class Component extends DCLogic {
     this.toastTimer = setTimeout(() => this.setState({ toast: "" }), 4200);
   }
 
+  /* Viber deep link with a prepared message. Opened synchronously inside the
+     click, before any network call, so the browser does not block it. */
+  viberLink(order) {
+    let d = String(order.phone || "").replace(/[^0-9]/g, "");
+    if (!d) return "";
+    if (d.indexOf("00") === 0) d = d.slice(2);
+    else if (d.indexOf("0") === 0) d = "381" + d.slice(1);
+    else if (d.indexOf("381") !== 0 && d.length <= 9) d = "381" + d;
+    const text = order.address
+      ? "Poštovani, Vaša porudžbina u fotografskoj radnji Studio Square je gotova i biće poslata putem pošte."
+      : "Poštovani, Vaša porudžbina u fotografskoj radnji Studio Square je gotova i spremna za preuzimanje.";
+    return "viber://chat?number=%2B" + d + "&draft=" + encodeURIComponent(text);
+  }
+
+  openViber(order) {
+    const link = this.viberLink(order);
+    if (!link) return;
+    try { window.location.href = link; } catch (e) { console.warn("viber:", e); }
+  }
+
   async change(order, status) {
     if (order.status === status) return;
+    if (status === "gotovo") this.openViber(order);
     const orders = this.state.orders.map(o => o.id === order.id ? Object.assign({}, o, { status }) : o);
     this.setState({ orders });
     try { await window.SS_ORDERS.setStatus(order.id, status); }
