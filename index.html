@@ -170,7 +170,7 @@
 
 
   <sc-if value="{{ upErr }}" hint-placeholder-val="{{ false }}">
-    <div style="position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(8,69,74,.55)">
+    <div style="position:fixed;top:0;right:0;bottom:0;left:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(8,69,74,.55)">
       <div style="width:min(100%,380px);display:flex;flex-direction:column;align-items:center;gap:14px;padding:30px 24px;border-radius:28px;background:#fff;text-align:center">
         <span style="font-family:var(--font-heading);font-size:22px;color:#15262a">{{ t.uploadFailTitle }}</span>
         <p style="margin:0;font-size:15px;line-height:1.6;color:#3d5a5e">{{ t.uploadFailBody }}</p>
@@ -649,25 +649,35 @@ class Component extends DCLogic {
     const w = bmp.width || bmp.naturalWidth;
     const h = bmp.height || bmp.naturalHeight;
     if (!w || !h) throw new Error("empty");
-    const canvas = document.createElement("canvas");
-    canvas.width = w;
-    canvas.height = h;
-    const ctx = canvas.getContext("2d");
-    ctx.fillStyle = "#fff";           // flatten PNG transparency
-    ctx.fillRect(0, 0, w, h);
-    ctx.drawImage(bmp, 0, 0, w, h);
-    if (bmp.close) bmp.close();
-    const blob = await new Promise((ok) => {
-      if (canvas.toBlob) { canvas.toBlob(ok, "image/jpeg", 0.95); return; }
+    const encode = (cw, ch) => new Promise((ok) => {
       try {
+        const canvas = document.createElement("canvas");
+        canvas.width = cw;
+        canvas.height = ch;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) { ok(null); return; }
+        ctx.fillStyle = "#fff";           // flatten PNG transparency
+        ctx.fillRect(0, 0, cw, ch);
+        ctx.drawImage(bmp, 0, 0, cw, ch);
+        if (canvas.toBlob) { canvas.toBlob(ok, "image/jpeg", 0.95); return; }
         const parts = canvas.toDataURL("image/jpeg", 0.95).split(",");
+        if (!parts[1]) { ok(null); return; }
         const bin = atob(parts[1]);
         const bytes = new Uint8Array(bin.length);
         for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
         ok(new Blob([bytes], { type: "image/jpeg" }));
       } catch (err) { ok(null); }
     });
-    if (!blob) throw new Error("encode");
+    let blob = await encode(w, h);
+    if (!blob || !blob.size) {
+      /* Older Android phones cap a canvas at about 16.7 million pixels. Only
+         when full size is refused, encode at the largest size they accept. */
+      const MAX = 16000000;
+      const k = Math.sqrt(MAX / (w * h));
+      if (k < 1) blob = await encode(Math.floor(w * k), Math.floor(h * k));
+    }
+    if (bmp.close) bmp.close();
+    if (!blob || !blob.size) throw new Error("encode");
     return new File([blob], this.jpegName(file.name), { type: "image/jpeg" });
   }
 

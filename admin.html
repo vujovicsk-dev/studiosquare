@@ -62,6 +62,7 @@
     .ord-steps span{font-size:11px !important}
   }
 </style>
+<script src="./legacy.js"></script>
 <script src="./zip.js"></script>
 <script src="./supabase.js"></script>
 <script src="./orders-api.js"></script>
@@ -190,7 +191,7 @@
   </sc-if>
 
   <sc-if value="{{ confirmOpen }}" hint-placeholder-val="{{ false }}">
-    <div style="position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(8,69,74,.55)">
+    <div style="position:fixed;top:0;right:0;bottom:0;left:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(8,69,74,.55)">
       <div style="width:min(100%,380px);display:flex;flex-direction:column;gap:14px;padding:26px;border-radius:26px;background:#fff;text-align:center">
         <span style="font-family:var(--font-heading);font-size:20px;font-weight:700">{{ confirmTitle }}</span>
         <p style="margin:0;font-size:14px;line-height:1.6;color:#3d5a5e">{{ confirmBody }}</p>
@@ -314,6 +315,11 @@
 /* Chime shapes: [frequency, start offset, length] per note. */
 /* Notes: [frequency, start offset, length]. Each pattern plays three times
    (see beep) so a new order is hard to miss in a busy shop. */
+/* aspect-ratio arrived in Chrome 88; older phones get the classic
+   padding box, which renders the same 3:2 thumbnail. */
+const THUMB_RATIO = (window.CSS && CSS.supports && CSS.supports("aspect-ratio", "3 / 2"))
+  ? "aspect-ratio:3 / 2;" : "height:0;padding-bottom:66.667%;";
+
 const TONES = {
   zvono: { label: "Alarm", notes: [[1568, 0, 0.12], [1175, 0.14, 0.12], [1568, 0.28, 0.12], [1175, 0.42, 0.12], [1568, 0.56, 0.2]] },
   meko:  { label: "Sirena", notes: [[700, 0, 0.35], [1200, 0.35, 0.35], [700, 0.7, 0.35], [1200, 1.05, 0.35]] },
@@ -858,7 +864,7 @@ class Component extends DCLogic {
             copiesLabel: "×" + (p.copies || 1),
             copiesStyle: "position:absolute;right:6px;bottom:6px;padding:2px 8px;border-radius:999px;" +
               "background:rgba(8,69,74,.82);color:#fff;font-size:11px;font-weight:700;line-height:1.5",
-            thumbStyle: "position:relative;display:block;width:100%;aspect-ratio:3 / 2;border-radius:12px;background:#e6f7f7 center/cover no-repeat url('" + p.url + "')"
+            thumbStyle: "position:relative;display:block;width:100%;" + THUMB_RATIO + "border-radius:12px;background:#e6f7f7 center/cover no-repeat url('" + p.url + "')"
           })),
           photosHeading: list
             ? this.plural(list.length, "fotografija", "fotografije", "fotografija") + " · " +
