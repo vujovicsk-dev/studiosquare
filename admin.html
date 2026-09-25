@@ -161,6 +161,23 @@
       </div>
 
       <div style="display:flex;flex-direction:column;gap:8px">
+        <span style="font-size:13px;font-weight:700;color:#3d5a5e">Porudžbine</span>
+        <sc-for list="{{ repRows }}" as="r" hint-placeholder-count="3">
+          <div style="display:grid;grid-template-columns:minmax(0,1.6fr) repeat(auto-fit,minmax(70px,1fr));align-items:baseline;gap:6px 12px;padding:10px 16px;border-radius:14px;background:#fff;border:1px solid #d6e8e8">
+            <span style="font-size:14px;font-weight:600;min-width:0;overflow-wrap:anywhere">{{ r.name }}</span>
+            <span style="font-size:13px;color:#3d5a5e">{{ r.date }}</span>
+            <span style="font-size:13px;color:#3d5a5e">{{ r.format }}</span>
+            <span style="font-size:13px;color:#3d5a5e">{{ r.photos }} foto</span>
+            <span style="font-size:13px;color:#3d5a5e">{{ r.copies }} kom</span>
+            <span style="font-size:14px;font-weight:600;text-align:right">{{ r.price }}</span>
+          </div>
+        </sc-for>
+        <sc-if value="{{ repEmpty }}" hint-placeholder-val="{{ false }}">
+          <span style="font-size:14px;color:#6b8589">Nema porudžbina u ovom mesecu.</span>
+        </sc-if>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
         <span style="font-size:13px;font-weight:700;color:#3d5a5e">Po formatima</span>
         <sc-for list="{{ repFormats }}" as="f" hint-placeholder-count="3">
           <div style="display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:10px;padding:10px 16px;border-radius:14px;background:#fff;border:1px solid #d6e8e8">
@@ -450,10 +467,20 @@ class Component extends DCLogic {
     }
   }
 
-  /* One summary sheet per month — totals plus a per-format breakdown.
-     Deliberately no per-order rows: this is a takings report, not invoices. */
+  reportDate(iso) {
+    const d = new Date(iso);
+    if (isNaN(d)) return "";
+    return String(d.getDate()).padStart(2, "0") + "." + String(d.getMonth() + 1).padStart(2, "0") + "." + d.getFullYear() + ".";
+  }
+
+  /* Monthly report from the Supabase orders already loaded in the admin:
+     one row per order, then the month's totals, then a per-format summary. */
   printReport(rows, label, sums) {
     const esc = t => String(t).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+    const orderRows = rows.slice().sort((a, b) => new Date(a.created_at) - new Date(b.created_at)).map(o =>
+      "<tr><td>" + esc(o.full_name || "—") + "</td><td>" + esc(this.reportDate(o.created_at)) +
+      "</td><td>" + esc(o.photo_format || "") + "</td><td class='r'>" + (o.photo_count || 0) +
+      "</td><td class='r'>" + (o.copies_total || 0) + "</td><td class='r'>" + this.dinars(o.total_price || 0) + "</td></tr>").join("");
     const body = sums.formats.map(f =>
       "<tr><td>" + esc(f.format) + "</td><td class='r'>" + f.orders +
       "</td><td class='r'>" + f.photos + "</td><td class='r'>" + f.copies +
@@ -480,7 +507,13 @@ class Component extends DCLogic {
       "<div>Fotografija<b>" + sums.photos + "</b></div>" +
       "<div>Komada<b>" + sums.copies + "</b></div>" +
       "<div>Prihod<b>" + this.dinars(sums.total) + "</b></div></div>" +
-      "<h2>Po formatima</h2>" +
+      "<h2>Porudžbine</h2>" +
+      "<table><thead><tr><th>Ime i prezime</th><th>Datum</th><th>Format</th>" +
+      "<th class='r'>Fotografija</th><th class='r'>Kopija</th><th class='r'>Cena</th></tr></thead>" +
+      "<tbody>" + orderRows + "</tbody>" +
+      "<tfoot><tr><td>Ukupno: " + sums.orders + " porudžbina</td><td></td><td></td><td class='r'>" + sums.photos +
+      "</td><td class='r'>" + sums.copies + "</td><td class='r'>" + this.dinars(sums.total) + "</td></tr></tfoot></table>" +
+      "<h2 style='margin-top:22pt'>Po formatima</h2>" +
       "<table><thead><tr><th>Format</th><th class='r'>Porudžbina</th>" +
       "<th class='r'>Fotografija</th><th class='r'>Komada</th><th class='r'>Prihod</th></tr></thead>" +
       "<tbody>" + body + "</tbody>" +
@@ -735,6 +768,15 @@ class Component extends DCLogic {
       repPhotos: String(sums.photos),
       repTotal: this.dinars(sums.total),
       repCopies: String(sums.copies),
+      repEmpty: inMonth.length === 0,
+      repRows: inMonth.slice().sort((a, b) => new Date(a.created_at) - new Date(b.created_at)).map(o => ({
+        name: o.full_name || "—",
+        date: this.reportDate(o.created_at),
+        format: o.photo_format || "",
+        photos: String(o.photo_count || 0),
+        copies: String(o.copies_total || 0),
+        price: this.dinars(o.total_price || 0)
+      })),
       repFormats: sums.formats.map(f => ({
         format: f.format,
         photosLabel: this.plural(f.photos, "fotografija", "fotografije", "fotografija") + " · " +
