@@ -583,7 +583,9 @@ class Component extends DCLogic {
     if (open[order.id]) { delete open[order.id]; this.setState({ open }); return; }
     open[order.id] = true;
     this.setState({ open });
-    if (this.state.photos[order.id]) return;
+    /* reload when the last attempt found nothing — files may have arrived since */
+    const had = this.state.photos[order.id];
+    if (had && had.length) return;
     try {
       const list = await window.SS_ORDERS.listPhotos(order);
       this.setState({ photos: Object.assign({}, this.state.photos, { [order.id]: list }) });
@@ -879,7 +881,7 @@ class Component extends DCLogic {
           askDelete: () => this.setState({ confirm: o }),
           photosOpen: isOpen,
           photos: (list || []).map((p, i) => ({
-            name: p.name, url: p.url,
+            name: p.name, url: p.download || p.url,
             label: "Fotografija " + (i + 1) + " — ×" + (p.copies || 1),
             title: p.name + " — " + (p.copies || 1) + " kom",
             copiesLabel: "×" + (p.copies || 1),
@@ -887,10 +889,13 @@ class Component extends DCLogic {
               "background:rgba(8,69,74,.82);color:#fff;font-size:11px;font-weight:700;line-height:1.5",
             thumbStyle: "position:relative;display:block;width:100%;" + THUMB_RATIO + "border-radius:12px;background:#e6f7f7 center/cover no-repeat url('" + p.url + "')"
           })),
-          photosHeading: list
-            ? this.plural(list.length, "fotografija", "fotografije", "fotografija") + " · " +
-              this.plural(list.reduce((n, p) => n + (p.copies || 1), 0), "komad", "komada", "komada")
-            : "",
+          photosHeading: !list
+            ? "Učitavanje fotografija…"
+            : !list.length
+              ? "Trenutno nema pronađenih fotografija za ovu porudžbinu (naručeno: " + o.photo_count + ")."
+              : this.plural(list.length, "fotografija", "fotografije", "fotografija") + " pronađeno" +
+                (o.photo_count && o.photo_count !== list.length ? " od " + o.photo_count + " naručenih" : "") + " · " +
+                this.plural(list.reduce((n, p) => n + (p.copies || 1), 0), "komad", "komada", "komada"),
           photosHint: "Paket za štampu ponavlja svaku fotografiju onoliko puta koliko je naručena. Klik na sličicu preuzima original.",
           printLabel: s.zipping[o.id + ":stampa"] ? "Pripremam…" : "🖨️ Pripremi za štampu",
           preparePrint: () => {

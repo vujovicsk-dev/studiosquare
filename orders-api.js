@@ -204,19 +204,23 @@
     return photoLoading[order.id];
   }
 
-  async function photoRows(id) {
+  /* order_photos rows for one order (they carry the copies per photo). */
+  async function dbRows(id) {
     if (byId[id] && byId[id].photos.length) return byId[id].photos;
-    var res = await api('/rest/v1/order_photos?select=id,file_path,file_name,copies&order_id=eq.' +
-      encodeURIComponent(id) + '&order=file_path.asc');
-    var rows = await res.json();
-    if (rows && rows.length) return rows;
-    return storageRows(id);
+    try {
+      var res = await api('/rest/v1/order_photos?select=id,file_path,file_name,copies&order_id=eq.' +
+        encodeURIComponent(id) + '&order=file_path.asc');
+      var rows = await res.json();
+      return Array.isArray(rows) ? rows : [];
+    } catch (e) {
+      console.warn('SS_ORDERS: order_photos za', id, 'nije učitan —', e && e.message);
+      return [];
+    }
   }
 
-  /* Orders that stayed in "upload" never reached finalize_order, so they have
-     no order_photos rows — but their files are in Storage under ORDER_ID/.
-     Read the folder directly so the admin still sees and downloads them.
-     Copies are unknown for these, so each counts as 1. */
+  /* The real files in Storage under photos/<ORDER_ID>/. This is the source of
+     truth for what the admin shows and downloads: photo_count only says how
+     many were ordered, not how many actually arrived. */
   async function storageRows(id) {
     var out = [];
     var offset = 0;
@@ -224,44 +228,86 @@
       var res = await api('/storage/v1/object/list/photos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prefix: String(id) + '/', limit: 1000, offset: offset, sortBy: { column: 'name', order: 'asc' } })
+        body: JSON.stringify({ prefix: String(id), limit: 1000, offset: offset, sortBy: { column: 'name', order: 'asc' } })
       });
       var list = await res.json();
       if (!Array.isArray(list) || !list.length) break;
       list.forEach(function (f) {
-        if (!f || !f.name || f.id === null) return;
-        out.push({ file_path: String(id) + '/' + f.name, file_name: f.name.replace(/^\d{4}-/, ''), copies: 1 });
+        /* folders come back with id null; placeholders are not photos */
+        if (!f || !f.name || f.id === null || f.name === '.emptyFolderPlaceholder') return;
+        out.push({ file_path: String(id) + '/' + f.name, file_name: f.name, copies: 1 });
       });
       if (list.length < 1000) break;
       offset += list.length;
     }
-    if (out.length) console.info('SS_ORDERS: porudžbina', id, '— fotografije pronađene direktno u Storage-u:', out.length);
     return out;
+  }
+
+  /* Every file that belongs to the order: what Storage really holds, with the
+     copies taken from order_photos where a row exists (1 otherwise). If the
+     Storage listing itself fails, fall back to the rows. */
+  async function photoRows(id) {
+    var both = await Promise.all([
+      storageRows(id).catch(function (e) {
+        console.warn('SS_ORDERS: Storage lista za', id, 'nije uspela —', e && e.message);
+        return null;
+      }),
+      dbRows(id)
+    ]);
+    var files = both[0], rows = both[1];
+    var copiesByPath = {};
+    rows.forEach(function (r) { copiesByPath[r.file_path] = Number(r.copies) || 1; });
+
+    var merged = files === null
+      ? rows.map(function (r) { return { file_path: r.file_path, file_name: r.file_name, copies: Number(r.copies) || 1 }; })
+      : files.map(function (f) { return { file_path: f.file_path, file_name: f.file_name, copies: copiesByPath[f.file_path] || 1 }; });
+
+    console.info('SS_ORDERS: porudžbina', id,
+      '| naručeno:', byId[id] ? byId[id].order.photo_count : '?',
+      '| u Storage-u:', files === null ? 'nije moguće pročitati' : files.length,
+      '| order_photos:', rows.length);
+    return merged;
+  }
+
+  async function signAll(paths) {
+    var urlByPath = {};
+    for (var i = 0; i < paths.length; i += 100) {
+      var chunk = paths.slice(i, i + 100);
+      try {
+        var res = await api('/storage/v1/object/sign/photos', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ expiresIn: SIGN_SECONDS, paths: chunk })
+        });
+        var signed = await res.json();
+        (Array.isArray(signed) ? signed : []).forEach(function (s) {
+          var u = s && (s.signedURL || s.signedUrl);
+          if (u) urlByPath[s.path] = /^https?:/.test(u) ? u : URL_ + '/storage/v1' + u;
+        });
+      } catch (e) {
+        console.error('SS_ORDERS: potpisivanje fotografija nije uspelo —', e && e.message);
+      }
+    }
+    return urlByPath;
   }
 
   async function loadPhotos(order) {
     var rows = await photoRows(order.id);
-    if (!rows.length) { photoCache[order.id] = { list: [], until: Date.now() + 30000 }; return []; }
+    if (!rows.length) { photoCache[order.id] = { list: [], until: Date.now() + 15000 }; return []; }
 
-    /* every photo of the order signed in one request */
-    var res = await api('/storage/v1/object/sign/photos', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ expiresIn: SIGN_SECONDS, paths: rows.map(function (r) { return r.file_path; }) })
-    });
-    var signed = await res.json();
-    var urlByPath = {};
-    (signed || []).forEach(function (s) {
-      var u = s.signedURL || s.signedUrl;
-      if (u) urlByPath[s.path] = /^https?:/.test(u) ? u : URL_ + '/storage/v1' + u;
-    });
+    var urlByPath = await signAll(rows.map(function (r) { return r.file_path; }));
 
     var out = rows.map(function (r) {
+      var name = r.file_path.split('/').pop();
+      var url = urlByPath[r.file_path] || '';
       return {
-        name: r.file_name || r.file_path.split('/').pop(),
+        name: name,
         copies: Number(r.copies) || 1,
         fileId: r.file_path,
-        url: urlByPath[r.file_path] || ''
+        url: url,
+        /* Content-Disposition: attachment — a click saves the file instead of
+           navigating away from the admin */
+        download: url ? url + (url.indexOf('?') === -1 ? '?' : '&') + 'download=' + encodeURIComponent(name) : ''
       };
     }).filter(function (p) { return p.url; });
 
