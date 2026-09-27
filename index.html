@@ -752,11 +752,12 @@ class Component extends DCLogic {
     this.setState({ uploading: { done: 0, total: photos.length }, upErr: "" });
 
     window.SS_BACKEND.submitOrder(order, photos, (done, tot) => this.setState({ uploading: { done: done, total: tot } }))
-      .then(() => {
+      .then(realId => {
         window.removeEventListener("beforeunload", guard);
         this.pending = null;
-        this.setState({ uploading: null, sent: { id: id } });
-        this.rememberOrder(id);
+        const oid = realId || id;
+        this.setState({ uploading: null, sent: { id: oid } });
+        this.rememberOrder(oid);
       })
       .catch(err => {
         console.error("backend:", err);
