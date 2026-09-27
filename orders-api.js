@@ -208,7 +208,35 @@
     if (byId[id] && byId[id].photos.length) return byId[id].photos;
     var res = await api('/rest/v1/order_photos?select=id,file_path,file_name,copies&order_id=eq.' +
       encodeURIComponent(id) + '&order=file_path.asc');
-    return res.json();
+    var rows = await res.json();
+    if (rows && rows.length) return rows;
+    return storageRows(id);
+  }
+
+  /* Orders that stayed in "upload" never reached finalize_order, so they have
+     no order_photos rows — but their files are in Storage under ORDER_ID/.
+     Read the folder directly so the admin still sees and downloads them.
+     Copies are unknown for these, so each counts as 1. */
+  async function storageRows(id) {
+    var out = [];
+    var offset = 0;
+    for (;;) {
+      var res = await api('/storage/v1/object/list/photos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prefix: String(id) + '/', limit: 1000, offset: offset, sortBy: { column: 'name', order: 'asc' } })
+      });
+      var list = await res.json();
+      if (!Array.isArray(list) || !list.length) break;
+      list.forEach(function (f) {
+        if (!f || !f.name || f.id === null) return;
+        out.push({ file_path: String(id) + '/' + f.name, file_name: f.name.replace(/^\d{4}-/, ''), copies: 1 });
+      });
+      if (list.length < 1000) break;
+      offset += list.length;
+    }
+    if (out.length) console.info('SS_ORDERS: porudžbina', id, '— fotografije pronađene direktno u Storage-u:', out.length);
+    return out;
   }
 
   async function loadPhotos(order) {

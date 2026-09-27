@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Studio Square — izrada fotografija</title>
+<title>Studio Square — štampa fotografija</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style id="ss-no-preloader">.sc-placeholder,.sc-interp.sc-missing{background:none!important;border-color:transparent!important}.sc-placeholder::before,.sc-interp.sc-missing::before{content:none!important;animation:none!important;background:none!important}</style>
 <script>
@@ -382,7 +382,7 @@ const FORMATS = [
   { id: "20x30", label: "20 × 30", price: 250 },
   { id: "30x40", label: "30 × 40", price: 500 }
 ];
-const DELIVERY = [{ id: "radnja", fee: 0 }, { id: "dostava", fee: 550 }];
+const DELIVERY = [{ id: "radnja", fee: 0 }, { id: "dostava", fee: 0 }];
 
 const STR = {
   sr: {
@@ -401,7 +401,7 @@ const STR = {
     socialHelp: "Otvorite naš profil, sačuvajte željene fotografije na svoj telefon ili računar, a zatim ih dodajte preko opcije „Računar ili telefon“.",
     socialOpenIg: "Otvori Instagram", socialOpenFb: "Otvori Facebook",
     pickupNote: "Za Novi Sad i okolinu do 40 km — porudžbinu možete preuzeti lično.",
-    unitPrice: "Cena po komadu", delivery: "Dostava", total: "Ukupno", submit: "Pošalji porudžbinu",
+    unitPrice: "Cena po komadu", delivery: "+ troškovi dostave", total: "Ukupno", submit: "Pošalji porudžbinu",
     hintReady: "Plaćanje pri preuzimanju. Rok izrade 1 radni dan.",
     hintMore: "Dodajte slike i unesite ime i telefon da nastavite.",
     biggerMap: "Prikaži veću mapu", hours: "Radno vreme", hoursValue: "Ponedeljak – Subota · 09:00 – 20:00",
@@ -423,7 +423,7 @@ const STR = {
     socialHelp: "Open our profile, save the photos you want to your phone or computer, then add them with the “Computer or phone” option.",
     socialOpenIg: "Open Instagram", socialOpenFb: "Open Facebook",
     pickupNote: "For Novi Sad and up to 40 km around — you can collect your order in person.",
-    unitPrice: "Price per print", delivery: "Delivery", total: "Total", submit: "Place order",
+    unitPrice: "Price per print", delivery: "+ delivery costs", total: "Total", submit: "Place order",
     hintReady: "Payment on collection. Ready in 1 working day.",
     hintMore: "Add photos and enter your name and phone to continue.",
     biggerMap: "Show larger map", hours: "Opening hours", hoursValue: "Monday – Saturday · 09:00 – 20:00",
@@ -845,7 +845,7 @@ class Component extends DCLogic {
       copiesLabel: copies + " " + t.pcs,
       unitLabel: this.dinars(unit) + " " + t.each,
       printsTotal: this.dinars(prints),
-      deliveryFeeLabel: this.dinars(del.fee),
+      deliveryFeeLabel: "",
       total: this.dinars(total),
 
       cannotSubmit: !ready || !!s.uploading,
