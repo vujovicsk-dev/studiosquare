@@ -168,7 +168,9 @@
       photo_count: Number(r.photo_count) || photos.length,
       copies_total: Number(r.copies_total) || Number(r.quantity) || sum,
       total_price: Number(r.total_price) || 0,
-      status: r.status || 'novo',
+      /* "upload" rows are shown as new orders; the stored status is left
+         untouched until the shop changes it. */
+      status: (!r.status || r.status === 'upload') ? 'novo' : r.status,
       spec: spec,
       folder_url: ''
     };
@@ -178,7 +180,7 @@
 
   async function fetchOrders() {
     var res = await api('/rest/v1/orders?select=*,order_photos(id,file_path,file_name,copies)' +
-      '&status=neq.upload&order=created_at.desc');
+      '&order=created_at.desc');
     return (await res.json()).map(toOrder);
   }
 
