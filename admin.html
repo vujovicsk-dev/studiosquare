@@ -1,1345 +1,967 @@
 <!DOCTYPE html>
+<html>
+<head>
+<link rel="preconnect" href="https://puyolmpmuafgmdssxada.supabase.co" crossorigin>
+<meta charset="utf-8">
+<title>Studio Square — porudžbine</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style id="ss-no-preloader">.sc-placeholder,.sc-interp.sc-missing{background:none!important;border-color:transparent!important}.sc-placeholder::before,.sc-interp.sc-missing::before{content:none!important;animation:none!important;background:none!important}</style>
+<script>
+/* React loader: tries three CDNs, then boots the runtime. Keeps the app from
+   rendering blank if one CDN is unreachable. No effect on design. */
+(function () {
+  var SETS = [
+    ['https://unpkg.com/react@18.3.1/umd/react.production.min.js',
+     'https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js'],
+    ['https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js',
+     'https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js'],
+    ['https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js',
+     'https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js']
+  ];
+  function load(url) {
+    return new Promise(function (ok, no) {
+      var s = document.createElement('script');
+      s.src = url; s.async = false;
+      s.onload = ok; s.onerror = function () { no(new Error(url)); };
+      document.head.appendChild(s);
+    });
+  }
+  function attempt(i) {
+    if (i >= SETS.length) return Promise.reject(new Error('react unavailable'));
+    return load(SETS[i][0]).then(function () { return load(SETS[i][1]); })
+      .catch(function () { return attempt(i + 1); });
+  }
+  function boot() {
+    var s = document.createElement('script');
+    s.src = './support.js'; s.async = false;
+    document.head.appendChild(s);
+  }
+  attempt(0).then(boot, boot);
 
-<html> <head> <link rel="preconnect" href="https://puyolmpmuafgmdssxada.supabase.co" crossorigin> <meta charset="utf-8"> <title>Studio Square — porudžbine</title> <meta name="viewport" content="width=device-width, initial-scale=1"> <style id="ss-no-preloader">.sc-placeholder,.sc-interp.sc-missing{background:none!important;border-color:transparent!important}.sc-placeholder::before,.sc-interp.sc-missing::before{content:none!important;animation:none!important;background:none!important}</style> <script> (function () { var SETS = [ ['https://unpkg.com/react@18.3.1/umd/react.production.min.js', 'https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js'], ['https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js', 'https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js'], ['https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js'] ];
-
-function load(url) {
-return new Promise(function (ok, no) {
-var s = document.createElement('script');
-s.src = url;
-s.async = false;
-s.onload = ok;
-s.onerror = function () { no(new Error(url)); };
-document.head.appendChild(s);
-});
-}
-
-function attempt(i) {
-if (i >= SETS.length) return Promise.reject(new Error('react unavailable'));
-return load(SETS[i][0]).then(function () {
-return load(SETS[i][1]);
-}).catch(function () {
-return attempt(i + 1);
-});
-}
-
-function boot() {
-var s = document.createElement('script');
-s.src = './support.js';
-s.async = false;
-document.head.appendChild(s);
-}
-
-attempt(0).then(boot, boot);
 })();
 </script>
-
 </head>
-
-<body> <x-dc> <helmet> <link rel="preconnect" href="https://fonts.googleapis.com"> <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin> <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600;700&family=Figtree:wght@400;500;600;700;800;900&display=swap">
-
-<style> :root{--font-heading:'Lora',Georgia,serif;--font-body:'Figtree',system-ui,sans-serif} *{box-sizing:border-box} body{margin:0;background:#e6f7f7;font-family:var(--font-body);color:#15262a;-webkit-font-smoothing:antialiased} a{color:#0a6b6b} a:hover{color:#0e9c9c} button{font-family:var(--font-body)} @keyframes newPulse{0%,100%{box-shadow:0 0 0 0 rgba(72,209,204,0)}50%{box-shadow:0 0 0 8px rgba(72,209,204,.28)}} @media (max-width:520px){ #admin-wrap{padding:20px 14px 40px !important} .ord-card{padding:16px !important} .ord-actions button{font-size:13px !important;padding:9px 14px !important} .ord-steps span{font-size:11px !important} } </style>
-
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600;700&family=Figtree:wght@400;500;600;700;800;900&display=swap">
+<style>
+  :root{--font-heading:'Lora',Georgia,serif;--font-body:'Figtree',system-ui,sans-serif}
+  *{box-sizing:border-box}
+  body{margin:0;background:#e6f7f7;font-family:var(--font-body);color:#15262a;-webkit-font-smoothing:antialiased}
+  a{color:#0a6b6b}
+  a:hover{color:#0e9c9c}
+  button{font-family:var(--font-body)}
+  @keyframes newPulse{0%,100%{box-shadow:0 0 0 0 rgba(72,209,204,0)}50%{box-shadow:0 0 0 8px rgba(72,209,204,.28)}}
+  @media (max-width:520px){
+    #admin-wrap{padding:20px 14px 40px !important}
+    .ord-card{padding:16px !important}
+    .ord-actions button{font-size:13px !important;padding:9px 14px !important}
+    .ord-steps span{font-size:11px !important}
+  }
+</style>
 <script src="./legacy.js"></script>
-
 <script src="./zip.js"></script>
-
 <script src="./supabase.js"></script>
-
 <script src="./orders-api.js"></script>
-
 </helmet>
 
-<sc-if value="{{ locked }}" hint-placeholder-val="{{ true }}"> <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px"> <form onSubmit="{{ onLogin }}" style="width:min(100%,380px);display:flex;flex-direction:column;gap:14px;padding:28px 24px;border-radius:28px;background:#fff;border:1px solid #c9eded"> <h1 style="margin:0;font-family:var(--font-heading);font-size:26px;font-weight:700">Studio Square — admin</h1> <span style="font-size:14px;color:#6b8589">Unesite lozinku za pristup porudžbinama.</span> <input type="password" value="{{ pw }}" onChange="{{ onPw }}" placeholder="Lozinka" autoComplete="current-password" style="padding:13px 16px;border:1px solid #d6e8e8;border-radius:999px;font-family:var(--font-body);font-size:15px;outline:none" style-focus="border-color:#48D1CC"> <sc-if value="{{ loginErr }}" hint-placeholder-val="{{ false }}"> <span style="font-size:13px;color:#b23b3b">{{ loginErr }}</span> </sc-if> <button type="submit" disabled="{{ loggingIn }}" style="padding:13px 18px;border:0;border-radius:999px;background:#48D1CC;color:#08454a;font-family:var(--font-body);font-size:15px;font-weight:700;cursor:pointer">{{ loginLabel }}</button> </form> </div> </sc-if>
-
-<sc-if value="{{ unlocked }}" hint-placeholder-val="{{ false }}"> <div id="admin-wrap" style="{{ wrapStyle }}">
-
-<header style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px"> <div style="display:flex;flex-direction:column;gap:4px"> <h1 style="margin:0;font-family:var(--font-heading);font-size:30px;font-weight:700">Porudžbine</h1> <span style="font-size:14px;color:#6b8589">{{ sourceLabel }}</span> </div>
-
-<div style="display:flex;flex-wrap:wrap;gap:10px">
-  <button type="button" onClick="{{ toggleSound }}" style="{{ soundStyle }}">{{ soundLabel }}</button>
-  <button type="button" onClick="{{ toggleSettings }}" style="padding:11px 18px;border:1px solid #d6e8e8;border-radius:999px;background:#fff;color:#3d5a5e;font-size:14px;font-weight:600;cursor:pointer" style-hover="border-color:#48D1CC">Zvuk ⚙</button>
-  <button type="button" onClick="{{ toggleReport }}" style="padding:11px 18px;border:1px solid #d6e8e8;border-radius:999px;background:#fff;color:#3d5a5e;font-size:14px;font-weight:600;cursor:pointer" style-hover="border-color:#48D1CC">Mesečni izveštaj</button>
-  <button type="button" onClick="{{ onLogout }}" style="padding:11px 18px;border:1px solid #d6e8e8;border-radius:999px;background:#fff;color:#3d5a5e;font-size:14px;font-weight:600;cursor:pointer" style-hover="border-color:#48D1CC">Odjava</button>
-</div>
-
-</header>
-
-<sc-if value="{{ settingsOpen }}" hint-placeholder-val="{{ false }}"> <section style="display:flex;flex-direction:column;gap:14px;padding:20px;border-radius:24px;background:#f7fdfd;border:1px solid #c9eded"> <span style="font-family:var(--font-heading);font-size:18px;font-weight:700">Zvučno obaveštenje</span>
-
-  <div style="display:flex;flex-direction:column;gap:8px">
-    <span style="font-size:13px;color:#3d5a5e">Zvuk</span>
-    <div style="display:flex;flex-wrap:wrap;gap:8px">
-      <sc-for list="{{ tones }}" as="t" hint-placeholder-count="3">
-        <button type="button" onClick="{{ t.select }}" style="{{ t.style }}">{{ t.label }}</button>
-      </sc-for>
-    </div>
+<sc-if value="{{ locked }}" hint-placeholder-val="{{ true }}">
+  <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px">
+    <form onSubmit="{{ onLogin }}" style="width:min(100%,380px);display:flex;flex-direction:column;gap:14px;padding:28px 24px;border-radius:28px;background:#fff;border:1px solid #c9eded">
+      <h1 style="margin:0;font-family:var(--font-heading);font-size:26px;font-weight:700">Studio Square — admin</h1>
+      <span style="font-size:14px;color:#6b8589">Unesite lozinku za pristup porudžbinama.</span>
+      <input type="password" value="{{ pw }}" onChange="{{ onPw }}" placeholder="Lozinka" autoComplete="current-password" style="padding:13px 16px;border:1px solid #d6e8e8;border-radius:999px;font-family:var(--font-body);font-size:15px;outline:none" style-focus="border-color:#48D1CC">
+      <sc-if value="{{ loginErr }}" hint-placeholder-val="{{ false }}">
+        <span style="font-size:13px;color:#b23b3b">{{ loginErr }}</span>
+      </sc-if>
+      <button type="submit" disabled="{{ loggingIn }}" style="padding:13px 18px;border:0;border-radius:999px;background:#48D1CC;color:#08454a;font-family:var(--font-body);font-size:15px;font-weight:700;cursor:pointer">{{ loginLabel }}</button>
+    </form>
   </div>
-
-  <div style="display:flex;flex-direction:column;gap:8px">
-    <span style="font-size:13px;color:#3d5a5e">Jačina: {{ volumeLabel }}</span>
-    <input type="range" min="0" max="100" step="5" value="{{ volume }}" onInput="{{ onVolume }}" style="width:min(100%,320px);accent-color:#48D1CC">
-  </div>
-
-  <div style="display:flex;flex-wrap:wrap;gap:8px">
-    <button type="button" onClick="{{ testSound }}" style="padding:10px 18px;border:0;border-radius:999px;background:#48D1CC;color:#08454a;font-size:14px;font-weight:700;cursor:pointer">Probaj zvuk</button>
-    <button type="button" onClick="{{ toggleSettings }}" style="padding:10px 18px;border:1px solid #d6e8e8;border-radius:999px;background:#fff;color:#3d5a5e;font-size:14px;font-weight:600;cursor:pointer">Zatvori</button>
-  </div>
-</section>
-
 </sc-if>
 
-<sc-if value="{{ reportOpen }}" hint-placeholder-val="{{ false }}"> <section style="display:flex;flex-direction:column;gap:14px;padding:20px;border-radius:24px;background:#f7fdfd;border:1px solid #c9eded"> <div style="display:flex;align-items:center;justify-content:space-between;gap:10px"> <span style="font-family:var(--font-heading);font-size:18px;font-weight:700">Mesečni izveštaj</span> <button type="button" onClick="{{ toggleReport }}" title="Zatvori" aria-label="Zatvori izveštaj" style="width:30px;height:30px;display:flex;align-items:center;justify-content:center;border:1px solid #d6e8e8;border-radius:999px;background:#fff;color:#3d5a5e;font-size:14px;line-height:1;cursor:pointer" style-hover="border-color:#48D1CC">✕</button> </div>
+<sc-if value="{{ unlocked }}" hint-placeholder-val="{{ false }}">
+<div id="admin-wrap" style="{{ wrapStyle }}">
 
-  <div style="display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px">
-    <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:#3d5a5e">
-      Mesec
-      <select value="{{ month }}" onChange="{{ onMonth }}" style="padding:10px 14px;border:1px solid #d6e8e8;border-radius:999px;background:#fff;font-family:var(--font-body);font-size:14px;color:#15262a">
-        <sc-for list="{{ months }}" as="m" hint-placeholder-count="3">
-          <option value="{{ m.value }}">{{ m.label }}</option>
+  <header style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px">
+    <div style="display:flex;flex-direction:column;gap:4px">
+      <h1 style="margin:0;font-family:var(--font-heading);font-size:30px;font-weight:700">Porudžbine</h1>
+      <span style="font-size:14px;color:#6b8589">{{ sourceLabel }}</span>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:10px">
+      <button type="button" onClick="{{ toggleSound }}" style="{{ soundStyle }}">{{ soundLabel }}</button>
+      <button type="button" onClick="{{ toggleSettings }}" style="padding:11px 18px;border:1px solid #d6e8e8;border-radius:999px;background:#fff;color:#3d5a5e;font-size:14px;font-weight:600;cursor:pointer" style-hover="border-color:#48D1CC">Zvuk ⚙</button>
+      <button type="button" onClick="{{ toggleReport }}" style="padding:11px 18px;border:1px solid #d6e8e8;border-radius:999px;background:#fff;color:#3d5a5e;font-size:14px;font-weight:600;cursor:pointer" style-hover="border-color:#48D1CC">Mesečni izveštaj</button>
+      <button type="button" onClick="{{ onLogout }}" style="padding:11px 18px;border:1px solid #d6e8e8;border-radius:999px;background:#fff;color:#3d5a5e;font-size:14px;font-weight:600;cursor:pointer" style-hover="border-color:#48D1CC">Odjava</button>
+    </div>
+  </header>
+
+  <sc-if value="{{ settingsOpen }}" hint-placeholder-val="{{ false }}">
+    <section style="display:flex;flex-direction:column;gap:14px;padding:20px;border-radius:24px;background:#f7fdfd;border:1px solid #c9eded">
+      <span style="font-family:var(--font-heading);font-size:18px;font-weight:700">Zvučno obaveštenje</span>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <span style="font-size:13px;color:#3d5a5e">Zvuk</span>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          <sc-for list="{{ tones }}" as="t" hint-placeholder-count="3">
+            <button type="button" onClick="{{ t.select }}" style="{{ t.style }}">{{ t.label }}</button>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <span style="font-size:13px;color:#3d5a5e">Jačina: {{ volumeLabel }}</span>
+        <input type="range" min="0" max="100" step="5" value="{{ volume }}" onInput="{{ onVolume }}" style="width:min(100%,320px);accent-color:#48D1CC">
+      </div>
+
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        <button type="button" onClick="{{ testSound }}" style="padding:10px 18px;border:0;border-radius:999px;background:#48D1CC;color:#08454a;font-size:14px;font-weight:700;cursor:pointer">Probaj zvuk</button>
+        <button type="button" onClick="{{ toggleSettings }}" style="padding:10px 18px;border:1px solid #d6e8e8;border-radius:999px;background:#fff;color:#3d5a5e;font-size:14px;font-weight:600;cursor:pointer">Zatvori</button>
+      </div>
+    </section>
+  </sc-if>
+
+  <sc-if value="{{ reportOpen }}" hint-placeholder-val="{{ false }}">
+    <section style="display:flex;flex-direction:column;gap:14px;padding:20px;border-radius:24px;background:#f7fdfd;border:1px solid #c9eded">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+        <span style="font-family:var(--font-heading);font-size:18px;font-weight:700">Mesečni izveštaj</span>
+        <button type="button" onClick="{{ toggleReport }}" title="Zatvori" aria-label="Zatvori izveštaj" style="width:30px;height:30px;display:flex;align-items:center;justify-content:center;border:1px solid #d6e8e8;border-radius:999px;background:#fff;color:#3d5a5e;font-size:14px;line-height:1;cursor:pointer" style-hover="border-color:#48D1CC">✕</button>
+      </div>
+
+      <div style="display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px">
+        <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:#3d5a5e">
+          Mesec
+          <select value="{{ month }}" onChange="{{ onMonth }}" style="padding:10px 14px;border:1px solid #d6e8e8;border-radius:999px;background:#fff;font-family:var(--font-body);font-size:14px;color:#15262a">
+            <sc-for list="{{ months }}" as="m" hint-placeholder-count="3">
+              <option value="{{ m.value }}">{{ m.label }}</option>
+            </sc-for>
+          </select>
+        </label>
+        <button type="button" onClick="{{ printReport }}" style="padding:11px 20px;border:0;border-radius:999px;background:#48D1CC;color:#08454a;font-size:14px;font-weight:700;cursor:pointer">Sačuvaj kao PDF</button>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px">
+        <div style="display:flex;flex-direction:column;gap:2px;padding:14px 16px;border-radius:18px;background:#fff;border:1px solid #d6e8e8">
+          <span style="font-size:12px;color:#6b8589">Porudžbina</span>
+          <span style="font-family:var(--font-heading);font-size:22px;font-weight:700">{{ repOrders }}</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:2px;padding:14px 16px;border-radius:18px;background:#fff;border:1px solid #d6e8e8">
+          <span style="font-size:12px;color:#6b8589">Fotografija</span>
+          <span style="font-family:var(--font-heading);font-size:22px;font-weight:700">{{ repPhotos }}</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:2px;padding:14px 16px;border-radius:18px;background:#fff;border:1px solid #d6e8e8">
+          <span style="font-size:12px;color:#6b8589">Komada</span>
+          <span style="font-family:var(--font-heading);font-size:22px;font-weight:700">{{ repCopies }}</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:2px;padding:14px 16px;border-radius:18px;background:#fff;border:1px solid #d6e8e8">
+          <span style="font-size:12px;color:#6b8589">Prihod</span>
+          <span style="font-family:var(--font-heading);font-size:22px;font-weight:700">{{ repTotal }}</span>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <span style="font-size:13px;font-weight:700;color:#3d5a5e">Porudžbine</span>
+        <sc-for list="{{ repRows }}" as="r" hint-placeholder-count="3">
+          <div style="display:grid;grid-template-columns:minmax(0,1.6fr) repeat(auto-fit,minmax(70px,1fr));align-items:baseline;gap:6px 12px;padding:10px 16px;border-radius:14px;background:#fff;border:1px solid #d6e8e8">
+            <span style="font-size:14px;font-weight:600;min-width:0;overflow-wrap:anywhere">{{ r.name }}</span>
+            <span style="font-size:13px;color:#3d5a5e">{{ r.date }}</span>
+            <span style="font-size:13px;color:#3d5a5e">{{ r.format }}</span>
+            <span style="font-size:13px;color:#3d5a5e">{{ r.photos }} foto</span>
+            <span style="font-size:13px;color:#3d5a5e">{{ r.copies }} kom</span>
+            <span style="font-size:14px;font-weight:600;text-align:right">{{ r.price }}</span>
+          </div>
         </sc-for>
-      </select>
-    </label>
-
-    <button type="button" onClick="{{ printReport }}" style="padding:11px 20px;border:0;border-radius:999px;background:#48D1CC;color:#08454a;font-size:14px;font-weight:700;cursor:pointer">Sačuvaj kao PDF</button>
-  </div>
-
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px">
-    <div style="display:flex;flex-direction:column;gap:2px;padding:14px 16px;border-radius:18px;background:#fff;border:1px solid #d6e8e8">
-      <span style="font-size:12px;color:#6b8589">Porudžbina</span>
-      <span style="font-family:var(--font-heading);font-size:22px;font-weight:700">{{ repOrders }}</span>
-    </div>
-    <div style="display:flex;flex-direction:column;gap:2px;padding:14px 16px;border-radius:18px;background:#fff;border:1px solid #d6e8e8">
-      <span style="font-size:12px;color:#6b8589">Fotografija</span>
-      <span style="font-family:var(--font-heading);font-size:22px;font-weight:700">{{ repPhotos }}</span>
-    </div>
-    <div style="display:flex;flex-direction:column;gap:2px;padding:14px 16px;border-radius:18px;background:#fff;border:1px solid #d6e8e8">
-      <span style="font-size:12px;color:#6b8589">Komada</span>
-      <span style="font-family:var(--font-heading);font-size:22px;font-weight:700">{{ repCopies }}</span>
-    </div>
-    <div style="display:flex;flex-direction:column;gap:2px;padding:14px 16px;border-radius:18px;background:#fff;border:1px solid #d6e8e8">
-      <span style="font-size:12px;color:#6b8589">Prihod</span>
-      <span style="font-family:var(--font-heading);font-size:22px;font-weight:700">{{ repTotal }}</span>
-    </div>
-  </div>
-
-  <div style="display:flex;flex-direction:column;gap:8px">
-    <span style="font-size:13px;font-weight:700;color:#3d5a5e">Porudžbine</span>
-    <sc-for list="{{ repRows }}" as="r" hint-placeholder-count="3">
-      <div style="display:grid;grid-template-columns:minmax(0,1.6fr) repeat(auto-fit,minmax(70px,1fr));align-items:baseline;gap:6px 12px;padding:10px 16px;border-radius:14px;background:#fff;border:1px solid #d6e8e8">
-        <span style="font-size:14px;font-weight:600;min-width:0;overflow-wrap:anywhere">{{ r.name }}</span>
-        <span style="font-size:13px;color:#3d5a5e">{{ r.date }}</span>
-        <span style="font-size:13px;color:#3d5a5e">{{ r.format }}</span>
-        <span style="font-size:13px;color:#3d5a5e">{{ r.photos }} foto</span>
-        <span style="font-size:13px;color:#3d5a5e">{{ r.copies }} kom</span>
-        <span style="font-size:14px;font-weight:600;text-align:right">{{ r.price }}</span>
+        <sc-if value="{{ repEmpty }}" hint-placeholder-val="{{ false }}">
+          <span style="font-size:14px;color:#6b8589">Nema porudžbina u ovom mesecu.</span>
+        </sc-if>
       </div>
-    </sc-for>
 
-    <sc-if value="{{ repEmpty }}" hint-placeholder-val="{{ false }}">
-      <span style="font-size:14px;color:#6b8589">Nema porudžbina u ovom mesecu.</span>
-    </sc-if>
-  </div>
-
-  <div style="display:flex;flex-direction:column;gap:8px">
-    <span style="font-size:13px;font-weight:700;color:#3d5a5e">Po formatima</span>
-    <sc-for list="{{ repFormats }}" as="f" hint-placeholder-count="3">
-      <div style="display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:10px;padding:10px 16px;border-radius:14px;background:#fff;border:1px solid #d6e8e8">
-        <span style="font-size:14px;font-weight:600">{{ f.format }}</span>
-        <span style="font-size:14px;color:#3d5a5e">{{ f.photosLabel }} · {{ f.totalLabel }}</span>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <span style="font-size:13px;font-weight:700;color:#3d5a5e">Po formatima</span>
+        <sc-for list="{{ repFormats }}" as="f" hint-placeholder-count="3">
+          <div style="display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:10px;padding:10px 16px;border-radius:14px;background:#fff;border:1px solid #d6e8e8">
+            <span style="font-size:14px;font-weight:600">{{ f.format }}</span>
+            <span style="font-size:14px;color:#3d5a5e">{{ f.photosLabel }} · {{ f.totalLabel }}</span>
+          </div>
+        </sc-for>
       </div>
+    </section>
+  </sc-if>
+
+  <sc-if value="{{ confirmOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;top:0;right:0;bottom:0;left:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(8,69,74,.55)">
+      <div style="width:min(100%,380px);display:flex;flex-direction:column;gap:14px;padding:26px;border-radius:26px;background:#fff;text-align:center">
+        <span style="font-family:var(--font-heading);font-size:20px;font-weight:700">{{ confirmTitle }}</span>
+        <p style="margin:0;font-size:14px;line-height:1.6;color:#3d5a5e">{{ confirmBody }}</p>
+        <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:10px">
+          <button type="button" onClick="{{ confirmDelete }}" style="padding:11px 20px;border:0;border-radius:999px;background:#c2453f;color:#fff;font-size:14px;font-weight:700;cursor:pointer">Obriši</button>
+          <button type="button" onClick="{{ cancelDelete }}" style="padding:11px 20px;border:1px solid #d6e8e8;border-radius:999px;background:#fff;color:#3d5a5e;font-size:14px;font-weight:600;cursor:pointer">Odustani</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ alertOn }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ dismissAlert }}" style="display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px 20px;border-radius:20px;background:#48D1CC;color:#08454a;cursor:pointer;animation:newPulse 1.2s ease-in-out infinite">
+      <span style="font-family:var(--font-heading);font-size:18px;font-weight:700">{{ alertText }}</span>
+      <span style="font-size:13px;font-weight:600;opacity:.75">Zatvori</span>
+    </div>
+  </sc-if>
+
+  <div style="display:flex;flex-wrap:wrap;align-items:flex-end;gap:8px">
+    <sc-for list="{{ filters }}" as="f" hint-placeholder-count="4">
+      <button type="button" onClick="{{ f.select }}" style="{{ f.style }}">
+        {{ f.label }}
+        <span style="{{ f.badgeStyle }}">{{ f.count }}</span>
+      </button>
     </sc-for>
   </div>
-</section>
 
-</sc-if>
-
-<sc-if value="{{ confirmOpen }}" hint-placeholder-val="{{ false }}"> <div style="position:fixed;top:0;right:0;bottom:0;left:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(8,69,74,.55)"> <div style="width:min(100%,380px);display:flex;flex-direction:column;gap:14px;padding:26px;border-radius:26px;background:#fff;text-align:center"> <span style="font-family:var(--font-heading);font-size:20px;font-weight:700">{{ confirmTitle }}</span> <p style="margin:0;font-size:14px;line-height:1.6;color:#3d5a5e">{{ confirmBody }}</p> <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:10px"> <button type="button" onClick="{{ confirmDelete }}" style="padding:11px 20px;border:0;border-radius:999px;background:#c2453f;color:#fff;font-size:14px;font-weight:700;cursor:pointer">Obriši</button> <button type="button" onClick="{{ cancelDelete }}" style="padding:11px 20px;border:1px solid #d6e8e8;border-radius:999px;background:#fff;color:#3d5a5e;font-size:14px;font-weight:600;cursor:pointer">Odustani</button> </div> </div> </div> </sc-if>
-
-<sc-if value="{{ alertOn }}" hint-placeholder-val="{{ false }}"> <div onClick="{{ dismissAlert }}" style="display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px 20px;border-radius:20px;background:#48D1CC;color:#08454a;cursor:pointer;animation:newPulse 1.2s ease-in-out infinite"> <span style="font-family:var(--font-heading);font-size:18px;font-weight:700">{{ alertText }}</span> <span style="font-size:13px;font-weight:600;opacity:.75">Zatvori</span> </div> </sc-if>
-
-<div style="display:flex;flex-wrap:wrap;align-items:flex-end;gap:8px"> <sc-for list="{{ filters }}" as="f" hint-placeholder-count="4"> <button type="button" onClick="{{ f.select }}" style="{{ f.style }}"> {{ f.label }} <span style="{{ f.badgeStyle }}">{{ f.count }}</span> </button> </sc-for> </div>
-
-<div style="display:flex;flex-direction:column;gap:14px"> <sc-for list="{{ visible }}" as="o" hint-placeholder-count="3"> <article class="ord-card" style="{{ o.cardStyle }}"> <div style="display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:10px"> <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:10px"> <span style="font-family:var(--font-heading);font-size:22px;font-weight:700">#{{ o.id }}</span> <span style="{{ o.pillStyle }}">{{ o.statusLabel }}</span> </div>
-
-      <div style="display:flex;align-items:center;gap:10px">
-        <span style="font-size:13px;color:#6b8589">{{ o.ago }}</span>
-        <button type="button" onClick="{{ o.askDelete }}" title="Obriši porudžbinu" aria-label="Obriši porudžbinu" style="width:30px;height:30px;display:flex;align-items:center;justify-content:center;border:1px solid #e4d2d1;border-radius:999px;background:#fff;color:#a8534e;font-size:14px;line-height:1;cursor:pointer" style-hover="background:#fbeceb;border-color:#c2453f;color:#c2453f">✕</button>
-      </div>
-    </div>
-
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px 18px">
-      <div style="display:flex;flex-direction:column">
-        <span style="font-size:12px;color:#6b8589">Kupac</span>
-        <span style="font-size:15px;font-weight:600">{{ o.full_name }}</span>
-        <a href="{{ o.telHref }}" style="font-size:15px;text-decoration:none">{{ o.phone }}</a>
-      </div>
-
-      <div style="display:flex;flex-direction:column">
-        <span style="font-size:12px;color:#6b8589">Format</span>
-        <span style="font-size:15px;font-weight:600">{{ o.photo_format }}</span>
-        <span style="font-size:15px">{{ o.photosLabel }} · ukupno {{ o.copiesLabel }}</span>
-      </div>
-
-      <div style="display:flex;flex-direction:column">
-        <span style="font-size:12px;color:#6b8589">{{ o.deliveryLabel }}</span>
-        <span style="font-size:15px">{{ o.deliveryValue }}</span>
-      </div>
-
-      <div style="display:flex;flex-direction:column">
-        <span style="font-size:12px;color:#6b8589">Iznos</span>
-        <span style="font-family:var(--font-heading);font-size:20px;font-weight:700">{{ o.totalLabel }}</span>
-      </div>
-    </div>
-
-    <sc-if value="{{ o.hasNote }}" hint-placeholder-val="{{ false }}">
-      <p style="margin:0;padding:10px 14px;border-radius:14px;background:#e6f7f7;font-size:14px;line-height:1.5;color:#3d5a5e">{{ o.note }}</p>
-    </sc-if>
-
-    <sc-if value="{{ o.photosOpen }}" hint-placeholder-val="{{ false }}">
-      <div style="display:flex;flex-direction:column;gap:12px;padding:16px;border-radius:20px;background:#fff;border:1px solid #d6e8e8">
-        <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px">
-          <span style="font-size:14px;font-weight:700">{{ o.photosHeading }}</span>
-
-          <div style="display:flex;flex-wrap:wrap;gap:8px">
-            <button type="button" onClick="{{ o.preparePrint }}" style="padding:9px 16px;border:0;border-radius:999px;background:#48D1CC;color:#08454a;font-size:14px;font-weight:700;cursor:pointer">{{ o.printLabel }}</button>
-            <button type="button" onClick="{{ o.downloadAll }}" style="padding:9px 16px;border:1px solid #d6e8e8;border-radius:999px;background:#fff;color:#3d5a5e;font-size:14px;font-weight:600;cursor:pointer">{{ o.zipLabel }}</button>
+  <div style="display:flex;flex-direction:column;gap:14px">
+    <sc-for list="{{ visible }}" as="o" hint-placeholder-count="3">
+      <article class="ord-card" style="{{ o.cardStyle }}">
+        <div style="display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:10px">
+          <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:10px">
+            <span style="font-family:var(--font-heading);font-size:22px;font-weight:700">#{{ o.id }}</span>
+            <span style="{{ o.pillStyle }}">{{ o.statusLabel }}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:13px;color:#6b8589">{{ o.ago }}</span>
+            <button type="button" onClick="{{ o.askDelete }}" title="Obriši porudžbinu" aria-label="Obriši porudžbinu" style="width:30px;height:30px;display:flex;align-items:center;justify-content:center;border:1px solid #e4d2d1;border-radius:999px;background:#fff;color:#a8534e;font-size:14px;line-height:1;cursor:pointer" style-hover="background:#fbeceb;border-color:#c2453f;color:#c2453f">✕</button>
           </div>
         </div>
 
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px">
-          <sc-for list="{{ o.photos }}" as="ph" hint-placeholder-count="4">
-            <a href="{{ ph.url }}" download="{{ ph.name }}" title="{{ ph.title }}" style="display:flex;flex-direction:column;gap:6px;text-decoration:none;color:#3d5a5e">
-              <span style="{{ ph.thumbStyle }}">
-                <span style="{{ ph.copiesStyle }}">{{ ph.copiesLabel }}</span>
-              </span>
-              <span style="font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ ph.label }}</span>
-            </a>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px 18px">
+          <div style="display:flex;flex-direction:column">
+            <span style="font-size:12px;color:#6b8589">Kupac</span>
+            <span style="font-size:15px;font-weight:600">{{ o.full_name }}</span>
+            <a href="{{ o.telHref }}" style="font-size:15px;text-decoration:none">{{ o.phone }}</a>
+          </div>
+          <div style="display:flex;flex-direction:column">
+            <span style="font-size:12px;color:#6b8589">Format</span>
+            <span style="font-size:15px;font-weight:600">{{ o.photo_format }}</span>
+            <span style="font-size:15px">{{ o.photosLabel }} · ukupno {{ o.copiesLabel }}</span>
+          </div>
+          <div style="display:flex;flex-direction:column">
+            <span style="font-size:12px;color:#6b8589">{{ o.deliveryLabel }}</span>
+            <span style="font-size:15px">{{ o.deliveryValue }}</span>
+          </div>
+          <div style="display:flex;flex-direction:column">
+            <span style="font-size:12px;color:#6b8589">Iznos</span>
+            <span style="font-family:var(--font-heading);font-size:20px;font-weight:700">{{ o.totalLabel }}</span>
+          </div>
+        </div>
+
+        <sc-if value="{{ o.hasNote }}" hint-placeholder-val="{{ false }}">
+          <p style="margin:0;padding:10px 14px;border-radius:14px;background:#e6f7f7;font-size:14px;line-height:1.5;color:#3d5a5e">{{ o.note }}</p>
+        </sc-if>
+
+        <sc-if value="{{ o.photosOpen }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;gap:12px;padding:16px;border-radius:20px;background:#fff;border:1px solid #d6e8e8">
+            <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px">
+              <span style="font-size:14px;font-weight:700">{{ o.photosHeading }}</span>
+              <div style="display:flex;flex-wrap:wrap;gap:8px">
+                <button type="button" onClick="{{ o.preparePrint }}" style="padding:9px 16px;border:0;border-radius:999px;background:#48D1CC;color:#08454a;font-size:14px;font-weight:700;cursor:pointer">{{ o.printLabel }}</button>
+                <button type="button" onClick="{{ o.downloadAll }}" style="padding:9px 16px;border:1px solid #d6e8e8;border-radius:999px;background:#fff;color:#3d5a5e;font-size:14px;font-weight:600;cursor:pointer">{{ o.zipLabel }}</button>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px">
+              <sc-for list="{{ o.photos }}" as="ph" hint-placeholder-count="4">
+                <a href="{{ ph.url }}" download="{{ ph.name }}" title="{{ ph.title }}" style="display:flex;flex-direction:column;gap:6px;text-decoration:none;color:#3d5a5e">
+                  <span style="{{ ph.thumbStyle }}">
+                    <span style="{{ ph.copiesStyle }}">{{ ph.copiesLabel }}</span>
+                  </span>
+                  <span style="font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ ph.label }}</span>
+                </a>
+              </sc-for>
+            </div>
+            <span style="font-size:12px;color:#6b8589">{{ o.photosHint }}</span>
+          </div>
+        </sc-if>
+
+        <div class="ord-steps" style="display:flex;align-items:flex-start;gap:0;padding-top:2px">
+          <sc-for list="{{ o.steps }}" as="st" hint-placeholder-count="3">
+            <div style="{{ st.wrapStyle }}">
+              <button type="button" onClick="{{ st.run }}" title="{{ st.label }}" style="{{ st.dotStyle }}">{{ st.mark }}</button>
+              <span style="{{ st.labelStyle }}">{{ st.label }}</span>
+              <span style="{{ st.lineStyle }}"></span>
+            </div>
           </sc-for>
         </div>
 
-        <span style="font-size:12px;color:#6b8589">{{ o.photosHint }}</span>
-      </div>
-    </sc-if>
-
-    <div class="ord-steps" style="display:flex;align-items:flex-start;gap:0;padding-top:2px">
-      <sc-for list="{{ o.steps }}" as="st" hint-placeholder-count="3">
-        <div style="{{ st.wrapStyle }}">
-          <button type="button" onClick="{{ st.run }}" title="{{ st.label }}" style="{{ st.dotStyle }}">{{ st.mark }}</button>
-          <span style="{{ st.labelStyle }}">{{ st.label }}</span>
-          <span style="{{ st.lineStyle }}"></span>
+        <div class="ord-actions" style="display:flex;flex-wrap:wrap;gap:8px">
+          <sc-for list="{{ o.actions }}" as="a" hint-placeholder-count="1">
+            <button type="button" onClick="{{ a.run }}" style="{{ a.style }}">{{ a.label }}</button>
+          </sc-for>
         </div>
-      </sc-for>
-    </div>
+      </article>
+    </sc-for>
+  </div>
 
-    <div class="ord-actions" style="display:flex;flex-wrap:wrap;gap:8px">
-      <sc-for list="{{ o.actions }}" as="a" hint-placeholder-count="1">
-        <button type="button" onClick="{{ a.run }}" style="{{ a.style }}">{{ a.label }}</button>
-      </sc-for>
-    </div>
-  </article>
-</sc-for>
+  <sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ false }}">
+    <p style="margin:24px 0;text-align:center;font-size:15px;color:#6b8589">Nema porudžbina u ovom prikazu.</p>
+  </sc-if>
 
+  <sc-if value="{{ toast }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;left:50%;bottom:24px;transform:translateX(-50%);max-width:min(92vw,420px);padding:14px 20px;border-radius:999px;background:#15262a;color:#fff;font-size:14px;line-height:1.4;text-align:center">{{ toastText }}</div>
+  </sc-if>
 </div>
-
-<sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ false }}"> <p style="margin:24px 0;text-align:center;font-size:15px;color:#6b8589">Nema porudžbina u ovom prikazu.</p> </sc-if>
-
-<sc-if value="{{ toast }}" hint-placeholder-val="{{ false }}"> <div style="position:fixed;left:50%;bottom:24px;transform:translateX(-50%);max-width:min(92vw,420px);padding:14px 20px;border-radius:999px;background:#15262a;color:#fff;font-size:14px;line-height:1.4;text-align:center">{{ toastText }}</div> </sc-if>
-
-</div> </sc-if>
+</sc-if>
 
 </x-dc>
-
-<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:940,&quot;height&quot;:900}}"> const THUMB_RATIO = (window.CSS && CSS.supports && CSS.supports("aspect-ratio", "3 / 2")) ? "aspect-ratio:3 / 2;" : "height:0;padding-bottom:66.667%;"; const TONES = { zvono: { label: "Alarm", notes: [[1568, 0, 0.12], [1175, 0.14, 0.12], [1568, 0.28, 0.12], [1175, 0.42, 0.12], [1568, 0.56, 0.2]] }, meko: { label: "Sirena", notes: [[700, 0, 0.35], [1200, 0.35, 0.35], [700, 0.7, 0.35], [1200, 1.05, 0.35]] }, kratko:{ label: "Kratko", notes: [[1760, 0, 0.1], [1760, 0.15, 0.1], [1760, 0.3, 0.16]] } }; const MONTHS_SR = ["januar", "februar", "mart", "april", "maj", "jun", "jul", "avgust", "septembar", "oktobar", "novembar", "decembar"]; const STATUSES = [ { id: "novo", label: "Novo" }, { id: "priprema", label: "U pripremi" }, { id: "gotovo", label: "Gotovo" } ]; class Component extends DCLogic { state = { orders: [], filter: "sve", sound: true, alert: null, toast: "", loaded: false, open: {}, photos: {}, zipping: {}, tone: "zvono", volume: 70, settings: false, report: false, month: "", confirm: null, authed: false, pw: "", loginErr: "", loggingIn: false }; componentDidMount() { this.setState({ authed: !!(window.SS_ORDERS && window.SS_ORDERS.isAuthed()) }); /* Audio unlock: Chrome/Edge/Safari mogu blokirati WebAudio dok korisnik prvi put ne klikne ili pritisne taster na stranici. Ovde unapred aktiviramo AudioContext čim korisnik napravi prvu interakciju sa Adminom. */ this.unlockAudio = () => { try { const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return; this.ac = this.ac || new AC(); if (this.ac.state === "suspended") { this.ac.resume().catch(() => {}); } } catch (e) { console.warn("Audio unlock:", e); } }; document.addEventListener("pointerdown", this.unlockAudio, { once: true }); document.addEventListener("keydown", this.unlockAudio, { once: true }); try { const saved = localStorage.getItem("ss-admin-sound"); if (saved !== null) this.setState({ sound: saved === "1" }); const tone = localStorage.getItem("ss-admin-tone"); if (tone && TONES[tone]) this.setState({ tone }); const vol = localStorage.getItem("ss-admin-volume"); if (vol !== null) { this.setState({ volume: Math.max(0, Math.min(100, Number(vol) || 0)) }); } } catch (e) {} try { const ep = window.SS_ORDERS && window.SS_ORDERS.endpoint; if (ep) { fetch(ep + "?action=ping", { cache: "no-store" }).catch(() => {}); } } catch (e) {} this.refresh(true); this.timer = setInterval(() => { if (!document.hidden) this.refresh(false); }, (window.SS_ORDERS && window.SS_ORDERS.pollMs) || 8000); this.onVisible = () => { if (!document.hidden) this.refresh(false); }; document.addEventListener("visibilitychange", this.onVisible); } componentWillUnmount() { clearInterval(this.timer); clearTimeout(this.toastTimer); document.removeEventListener("visibilitychange", this.onVisible); if (this.unlockAudio) { document.removeEventListener("pointerdown", this.unlockAudio); document.removeEventListener("keydown", this.unlockAudio); } } async refresh(first) { if (!window.SS_ORDERS || !window.SS_ORDERS.isAuthed()) return; if (this.listing) return; this.listing = true; let orders; try { orders = await window.SS_ORDERS.list(); } catch (e) { console.error("orders:", e); if (/unauthorized/i.test(String(e.message || e))) { window.SS_ORDERS.logout(); this.setState({ authed: false, loginErr: "Sesija je istekla — prijavite se ponovo." }); } else { this.setState({ loaded: true, toast: "Porudžbine nisu učitane: " + String(e.message || e) }); } return; } finally { this.listing = false; } const known = this.state.orders.map(o => o.id); const fresh = first ? [] : orders.filter(o => known.indexOf(o.id) === -1); this.setState({ orders, loaded: true }); if (fresh.length) { this.setState({ alert: fresh.length === 1 ? "Nova porudžbina #" + fresh[0].id : fresh.length + " novih porudžbina" }); this.beep(); if (document.title.indexOf("(") !== 0) { document.title = "(" + fresh.length + ") Porudžbine"; } } } /* Chime built with WebAudio — no audio file to ship or cache. */ beep(force) { if (!force && !this.state.sound) return; const level = this.state.volume / 100; if (level <= 0) return; try { const AC = window.AudioContext || window.webkitAudioContext; if (!AC) { console.warn("WebAudio nije podržan."); return; } if (!this.ac) { this.ac = new AC(); } const play = () => { try { const tone = TONES[this.state.tone] || TONES.zvono; const out = this.ac.createDynamicsCompressor(); out.threshold.value = -18; out.knee.value = 6; out.ratio.value = 8; out.attack.value = 0.002; out.release.value = 0.12; const master = this.ac.createGain(); master.gain.value = 1.6 * level; out.connect(master); master.connect(this.ac.destination); const span = tone.notes.reduce( (m, n) => Math.max(m, n[1] + n[2]), 0 ) + 0.25; for (let rep = 0; rep < 3; rep++) { tone.notes.forEach(([freq, at, len]) => { const t = this.ac.currentTime + rep * span + at; [0, 7].forEach(detune => { const osc = this.ac.createOscillator(); const gain = this.ac.createGain(); osc.type = "sawtooth"; osc.frequency.setValueAtTime(freq, t); osc.detune.setValueAtTime(detune, t); gain.gain.setValueAtTime(0.0001, t); gain.gain.exponentialRampToValueAtTime( 0.5, t + 0.01 ); gain.gain.setValueAtTime( 0.5, t + len * 0.7 ); gain.gain.exponentialRampToValueAtTime( 0.0001, t + len ); osc.connect(gain); gain.connect(out); osc.start(t); osc.stop(t + len + 0.02); }); }); } } catch (e) { console.warn("Zvuk nije pokrenut:", e); } }; if (this.ac.state === "suspended") { this.ac.resume() .then(play) .catch(e => { console.warn("AudioContext resume:", e); }); } else { play(); } } catch (e) { console.warn("Zvuk nije pokrenut:", e); } } async doDelete(order) { this.setState({ confirm: null }); const orders = this.state.orders.filter( o => o.id !== order.id ); this.setState({ orders }); try { await window.SS_ORDERS.remove(order.id); this.say("Porudžbina #" + order.id + " je obrisana."); } catch (e) { console.error("delete:", e); this.say("Brisanje nije uspelo — osvežite stranicu."); } } reportDate(iso) { const d = new Date(iso); if (isNaN(d)) return ""; return String(d.getDate()).padStart(2, "0") + "." + String(d.getMonth() + 1).padStart(2, "0") + "." + d.getFullYear() + "."; } printReport(rows, label, sums) { const esc = t => String(t).replace( /[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]) ); const orderRows = rows .slice() .sort( (a, b) => new Date(a.created_at) - new Date(b.created_at) ) .map(o => "<tr><td>" + esc(o.full_name || "—") + "</td><td>" + esc(this.reportDate(o.created_at)) + "</td><td>" + esc(o.photo_format || "") + "</td><td class='r'>" + (o.photo_count || 0) + "</td><td class='r'>" + (o.copies_total || 0) + "</td><td class='r'>" + this.dinars(o.total_price || 0) + "</td></tr>" ) .join(""); const body = sums.formats .map(f => "<tr><td>" + esc(f.format) + "</td><td class='r'>" + f.orders + "</td><td class='r'>" + f.photos + "</td><td class='r'>" + f.copies + "</td><td class='r'>" + this.dinars(f.total) + "</td></tr>" ) .join(""); const html = "<!DOCTYPE html><html><head><meta charset='utf-8'><title>Studio Square — " + esc(label) + "</title><style>" + "@page{margin:18mm}" + "body{font-family:Georgia,serif;color:#15262a;margin:0}" + "h1{font-size:24pt;margin:0 0 2pt}" + "p.sub{margin:0 0 22pt;font-size:11pt;color:#5b787c}" + ".sums{display:flex;gap:28pt;margin-bottom:24pt;font-size:11pt}" + ".sums b{display:block;font-size:20pt;margin-top:2pt}" + "h2{font-size:13pt;margin:0 0 8pt}" + "table{width:100%;border-collapse:collapse;font-size:10.5pt}" + "th{text-align:left;border-bottom:1.5pt solid #15262a;padding:6pt 4pt}" + "th.r,td.r{text-align:right}" + "td{border-bottom:.5pt solid #cfe0e0;padding:6pt 4pt}" + "tfoot td{border-top:1.5pt solid #15262a;border-bottom:0;font-weight:700}" + "p.foot{margin-top:24pt;font-size:9pt;color:#5b787c}" + "</style></head><body>" +
-
-  "<h1>Studio Square</h1><p class='sub'>Mesečni izveštaj — " +
-  esc(label) +
-  "</p>" +
-  "<div class='sums'><div>Porudžbina<b>" +
-  sums.orders +
-  "</b></div>" +
-  "<div>Fotografija<b>" +
-  sums.photos +
-  "</b></div>" +
-  "<div>Komada<b>" +
-  sums.copies +
-  "</b></div>" +
-  "<div>Prihod<b>" +
-  this.dinars(sums.total) +
-  "</b></div></div>" +
-  "<h2>Porudžbine</h2>" +
-  "<table><thead><tr><th>Ime i prezime</th><th>Datum</th><th>Format</th>" +
-  "<th class='r'>Fotografija</th><th class='r'>Kopija</th><th class='r'>Cena</th></tr></thead>" +
-  "<tbody>" +
-  orderRows +
-  "</tbody>" +
-  "<tfoot><tr><td>Ukupno: " +
-  sums.orders +
-  " porudžbina</td><td></td><td></td><td class='r'>" +
-  sums.photos +
-  "</td><td class='r'>" +
-  sums.copies +
-  "</td><td class='r'>" +
-  this.dinars(sums.total) +
-  "</td></tr></tfoot></table>" +
-  "<h2 style='margin-top:22pt'>Po formatima</h2>" +
-  "<table><thead><tr><th>Format</th><th class='r'>Porudžbina</th>" +
-  "<th class='r'>Fotografija</th><th class='r'>Komada</th><th class='r'>Prihod</th></tr></thead>" +
-  "<tbody>" +
-  body +
-  "</tbody>" +
-  "<tfoot><tr><td>Ukupno</td><td class='r'>" +
-  sums.orders +
-  "</td><td class='r'>" +
-  sums.photos +
-  "</td><td class='r'>" +
-  sums.copies +
-  "</td><td class='r'>" +
-  this.dinars(sums.total) +
-  "</td></tr></tfoot></table>" +
-  "<p class='foot'>Izveštaj generisan " +
-  new Date().toLocaleDateString("sr-RS") +
-  ".</p>" +
-  "</body></html>";
-
-const w = window.open("", "_blank");
-
-if (!w) {
-  this.say("Dozvolite iskačuće prozore da biste sačuvali PDF.");
-  return;
-}
-
-w.document.write(html);
-w.document.close();
-w.focus();
-
-setTimeout(() => w.print(), 350);
-
-}
-
-say(text) {
-clearTimeout(this.toastTimer);
-this.setState({ toast: text });
-
-this.toastTimer = setTimeout(
-  () => this.setState({ toast: "" }),
-  4200
-);
-
-}
-
-viberLink(order) {
-let d = String(order.phone || "").replace(/[^0-9]/g, "");
-
-if (!d) return "";
-
-if (d.indexOf("00") === 0) d = d.slice(2);
-else if (d.indexOf("0") === 0) d = "381" + d.slice(1);
-else if (d.indexOf("381") !== 0 && d.length <= 9) d = "381" + d;
-
-const text = order.address
-  ? "Poštovani, Vaša porudžbina u fotografskoj radnji Studio Square je gotova i biće poslata putem pošte."
-  : "Poštovani, Vaša porudžbina u fotografskoj radnji Studio Square je gotova i spremna za preuzimanje.";
-
-return "viber://chat?number=%2B" +
-  d +
-  "&draft=" +
-  encodeURIComponent(text);
-
-}
-
-openViber(order) {
-const link = this.viberLink(order);
-
-if (!link) return;
-
-try {
-  window.location.href = link;
-} catch (e) {
-  console.warn("viber:", e);
-}
-
-}
-
-async change(order, status) {
-if (order.status === status) return;
-
-if (status === "gotovo") {
-  this.openViber(order);
-}
-
-const orders = this.state.orders.map(o =>
-  o.id === order.id
-    ? Object.assign({}, o, { status })
-    : o
-);
-
-this.setState({ orders });
-
-try {
-  await window.SS_ORDERS.setStatus(order.id, status);
-} catch (e) {
-  console.error("status:", e);
-  this.say("Status nije sačuvan — pokušajte ponovo.");
-  return;
-}
-
-if (status === "gotovo") {
-  const res = await window.SS_ORDERS.notifyReady(order);
-
-  this.say(
-    res.shown
-      ? "Obaveštenje poslato kupcu."
-      : "Obaveštenja nisu dozvoljena u pregledaču — poruka: " +
-        res.body
-  );
-}
-
-}
-
-async togglePhotos(order) {
-const open = Object.assign({}, this.state.open);
-
-if (open[order.id]) {
-  delete open[order.id];
-  this.setState({ open });
-  return;
-}
-
-open[order.id] = true;
-this.setState({ open });
-
-const had = this.state.photos[order.id];
-
-if (had && had.length) return;
-
-try {
-  const list = await window.SS_ORDERS.listPhotos(order);
-
-  this.setState({
-    photos: Object.assign({}, this.state.photos, {
-      [order.id]: list
-    })
-  });
-} catch (e) {
-  console.error("photos:", e);
-  this.say("Fotografije nije moguće učitati.");
-}
-
-}
-
-async downloadZip(order, mode) {
-const list = this.state.photos[order.id] || [];
-
-if (!list.length) return;
-
-const key = order.id + ":" + mode;
-
-this.setState({
-  zipping: Object.assign({}, this.state.zipping, {
-    [key]: true
-  })
-});
-
-try {
-  const blobs = [];
-
-  for (const p of list) {
-    blobs.push(await (await fetch(p.url)).blob());
-  }
-
-  const files = [];
-
-  list.forEach((p, i) => {
-    const copies =
-      mode === "stampa"
-        ? (p.copies || 1)
-        : 1;
-
-    const base = p.name.replace(/\.jpe?g$/i, "");
-
-    for (let c = 1; c <= copies; c++) {
-      files.push({
-        name:
-          mode === "stampa" && copies > 1
-            ? base + "_kopija-" + c + ".jpg"
-            : p.name,
-        blob: blobs[i]
-      });
-    }
-  });
-
-  const fmt = String(order.photo_format)
-    .replace(/×/g, "x")
-    .replace(/\s+/g, " ")
-    .trim();
-
-  const who = String(
-    order.full_name || "Porudzbina " + order.id
-  )
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^A-Za-z0-9 ]/g, "")
-    .replace(/\s+/g, " ")
-    .trim();
-
-  const base = who + " - " + fmt;
-
-  const zip = await window.SS_ZIP.make(files);
-
-  window.SS_ZIP.save(
-    zip,
-    mode === "stampa"
-      ? base + ".zip"
-      : base + " (originali).zip"
-  );
-
-  if (mode === "stampa") {
-    this.say(
-      "Paket za štampu: " +
-      files.length +
-      " listova, format " +
-      order.photo_format +
-      "."
-    );
-  }
-
-} catch (e) {
-  console.error("zip:", e);
-  this.say("Preuzimanje nije uspelo.");
-}
-
-const z = Object.assign({}, this.state.zipping);
-delete z[key];
-
-this.setState({ zipping: z });
-
-}
-
-dinars(n) {
-return new Intl.NumberFormat("sr-RS").format(n) + " RSD";
-}
-
-ago(iso) {
-const mins = Math.max(
-0,
-Math.round(
-(Date.now() - new Date(iso).getTime()) / 60000
-)
-);
-
-if (mins < 1) return "upravo sada";
-if (mins < 60) return "pre " + mins + " min";
-
-const h = Math.round(mins / 60);
-
-if (h < 24) return "pre " + h + " h";
-
-return "pre " + Math.round(h / 24) + " d";
-
-}
-
-plural(n, one, few, many) {
-const d = n % 10;
-const dd = n % 100;
-
-if (d === 1 && dd !== 11) {
-  return n + " " + one;
-}
-
-if (
-  d >= 2 &&
-  d <= 4 &&
-  (dd < 12 || dd > 14)
-) {
-  return n + " " + few;
-}
-
-return n + " " + many;
-
-}
-
-renderVals() {
-const s = this.state;
-
-const counts = {
-  sve: s.orders.length
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:940,&quot;height&quot;:900}}">
+/* Chime shapes: [frequency, start offset, length] per note. */
+/* Notes: [frequency, start offset, length]. Each pattern plays three times
+   (see beep) so a new order is hard to miss in a busy shop. */
+/* aspect-ratio arrived in Chrome 88; older phones get the classic
+   padding box, which renders the same 3:2 thumbnail. */
+const THUMB_RATIO = (window.CSS && CSS.supports && CSS.supports("aspect-ratio", "3 / 2"))
+  ? "aspect-ratio:3 / 2;" : "height:0;padding-bottom:66.667%;";
+
+const TONES = {
+  zvono: { label: "Alarm", notes: [[1568, 0, 0.12], [1175, 0.14, 0.12], [1568, 0.28, 0.12], [1175, 0.42, 0.12], [1568, 0.56, 0.2]] },
+  meko:  { label: "Sirena", notes: [[700, 0, 0.35], [1200, 0.35, 0.35], [700, 0.7, 0.35], [1200, 1.05, 0.35]] },
+  kratko:{ label: "Kratko", notes: [[1760, 0, 0.1], [1760, 0.15, 0.1], [1760, 0.3, 0.16]] }
 };
 
-STATUSES.forEach(st => {
-  counts[st.id] =
-    s.orders.filter(o => o.status === st.id).length;
-});
+const MONTHS_SR = ["januar", "februar", "mart", "april", "maj", "jun",
+  "jul", "avgust", "septembar", "oktobar", "novembar", "decembar"];
 
-const tab = (id, label) => {
-  const n = counts[id] || 0;
-  const on = s.filter === id;
-  const hot = id === "novo" && n > 0;
+const STATUSES = [
+  { id: "novo", label: "Novo" },
+  { id: "priprema", label: "U pripremi" },
+  { id: "gotovo", label: "Gotovo" }
+];
 
-  return {
-    label: label,
-    count: n,
-
-    select: () =>
-      this.setState({ filter: id }),
-
-    style:
-      "display:inline-flex;align-items:center;gap:8px;padding:10px 14px 10px 18px;border-radius:999px;" +
-      "font-size:14px;font-weight:600;cursor:pointer;border:1px solid " +
-      (
-        on
-          ? "#48D1CC;background:#48D1CC;color:#08454a"
-          : "#d6e8e8;background:#fff;color:#3d5a5e"
-      ),
-
-    badgeStyle:
-      "min-width:24px;height:24px;padding:0 7px;display:inline-flex;align-items:center;justify-content:center;" +
-      "border-radius:999px;font-size:13px;font-weight:700;line-height:1;" +
-      (
-        hot
-          ? "background:#c2453f;color:#fff"
-          : on
-            ? "background:rgba(8,69,74,.14);color:#08454a"
-            : "background:#e6f7f7;color:#3d5a5e"
-      )
+class Component extends DCLogic {
+  state = {
+    orders: [], filter: "sve", sound: true,
+    alert: null, toast: "", loaded: false,
+    open: {}, photos: {}, zipping: {},
+    tone: "zvono", volume: 70, settings: false,
+    report: false, month: "", confirm: null,
+    authed: false, pw: "", loginErr: "", loggingIn: false
   };
-};
 
-const monthKeys = [];
-
-s.orders.forEach(o => {
-  const d = new Date(o.created_at);
-
-  const key =
-    d.getFullYear() +
-    "-" +
-    String(d.getMonth() + 1).padStart(2, "0");
-
-  if (monthKeys.indexOf(key) === -1) {
-    monthKeys.push(key);
-  }
-});
-
-monthKeys.sort().reverse();
-
-const monthLabel = k =>
-  k
-    ? MONTHS_SR[Number(k.slice(5)) - 1] +
-      " " +
-      k.slice(0, 4)
-    : "";
-
-const month =
-  s.month &&
-  monthKeys.indexOf(s.month) !== -1
-    ? s.month
-    : monthKeys[0] || "";
-
-const inMonth = s.orders.filter(o => {
-  const d = new Date(o.created_at);
-
-  return (
-    d.getFullYear() +
-    "-" +
-    String(d.getMonth() + 1).padStart(2, "0")
-  ) === month;
-});
-
-const byFormat = {};
-
-inMonth.forEach(o => {
-  const f =
-    byFormat[o.photo_format] ||
-    (
-      byFormat[o.photo_format] = {
-        format: o.photo_format,
-        orders: 0,
-        photos: 0,
-        copies: 0,
-        total: 0
-      }
-    );
-
-  f.orders += 1;
-  f.photos += o.photo_count;
-  f.copies += o.copies_total;
-  f.total += o.total_price;
-});
-
-const sums = {
-  orders: inMonth.length,
-  photos: inMonth.reduce(
-    (n, o) => n + o.photo_count,
-    0
-  ),
-  copies: inMonth.reduce(
-    (n, o) => n + o.copies_total,
-    0
-  ),
-  total: inMonth.reduce(
-    (n, o) => n + o.total_price,
-    0
-  ),
-  formats: Object.keys(byFormat)
-    .sort()
-    .map(k => byFormat[k])
-};
-
-const visible = s.orders.filter(
-  o =>
-    s.filter === "sve" ||
-    o.status === s.filter
-);
-
-const pill = st => {
-  const bg =
-    st === "novo"
-      ? "#48D1CC"
-      : st === "priprema"
-        ? "#fde8c9"
-        : "#d8f0e2";
-
-  return (
-    "padding:5px 13px;border-radius:999px;background:" +
-    bg +
-    ";color:#15262a;font-size:12px;font-weight:700"
-  );
-};
-
-const btn = primary =>
-  "padding:10px 16px;border-radius:999px;font-size:14px;font-weight:600;cursor:pointer;border:1px solid " +
-  (
-    primary
-      ? "#48D1CC;background:#48D1CC;color:#08454a"
-      : "#d6e8e8;background:#fff;color:#3d5a5e"
-  );
-
-return {
-  locked: !s.authed,
-  unlocked: s.authed,
-
-  wrapStyle:
-    "min-height:100vh;max-width:940px;margin:0 auto;padding:32px 20px 60px;display:flex;flex-direction:column;gap:20px",
-
-  pw: s.pw,
-  loginErr: s.loginErr,
-  loggingIn: s.loggingIn,
-  loginLabel:
-    s.loggingIn ? "Prijava…" : "Prijavi se",
-
-  onPw: e =>
-    this.setState({
-      pw: e.target.value
-    }),
-
-  onLogin: async e => {
-    e.preventDefault();
-
-    if (this.state.loggingIn) return;
-
-    this.setState({
-      loggingIn: true,
-      loginErr: ""
-    });
-
+  componentDidMount() {
+    this.setState({ authed: !!(window.SS_ORDERS && window.SS_ORDERS.isAuthed()) });
     try {
-      const first =
-        await window.SS_ORDERS.login(
-          this.state.pw
-        );
-
-      const orders =
-        (first && first.orders) || [];
-
-      this.setState({
-        authed: true,
-        pw: "",
-        loggingIn: false,
-        orders: orders,
-        loaded: orders.length > 0
-      });
-
-      this.refresh(true);
-
-    } catch (err) {
-      const msg =
-        String(err.message || err);
-
-      window.SS_ORDERS.logout();
-
-      this.setState({
-        loggingIn: false,
-        loginErr:
-          /unauthorized/i.test(msg)
-            ? "Server je odbio token — ponovo deploy-ujte Apps Script (New deployment)."
-            : msg
-      });
-    }
-  },
-
-  onLogout: () => {
-    window.SS_ORDERS.logout();
-
-    this.setState({
-      authed: false,
-      orders: [],
-      pw: "",
-      loginErr: ""
-    });
-  },
-
-  sourceLabel: "Uživo",
-
-  soundLabel:
-    s.sound
-      ? "🔔 Zvuk uključen"
-      : "🔕 Zvuk isključen",
-
-  soundStyle:
-    "padding:11px 18px;border-radius:999px;font-size:14px;font-weight:600;cursor:pointer;border:1px solid " +
-    (
-      s.sound
-        ? "#48D1CC;background:#48D1CC;color:#08454a"
-        : "#d6e8e8;background:#fff;color:#3d5a5e"
-    ),
-
-  toggleSound: () => {
-    const next = !s.sound;
-
-    this.setState({
-      sound: next
-    });
-
-    try {
-      localStorage.setItem(
-        "ss-admin-sound",
-        next ? "1" : "0"
-      );
+      const saved = localStorage.getItem("ss-admin-sound");
+      if (saved !== null) this.setState({ sound: saved === "1" });
+      const tone = localStorage.getItem("ss-admin-tone");
+      if (tone && TONES[tone]) this.setState({ tone });
+      const vol = localStorage.getItem("ss-admin-volume");
+      if (vol !== null) this.setState({ volume: Math.max(0, Math.min(100, Number(vol) || 0)) });
     } catch (e) {}
 
-    if (next) {
-      /* User interaction already unlocked AudioContext above. */
-      setTimeout(
-        () => this.beep(),
-        40
-      );
-    }
-  },
-
-  settingsOpen: s.settings,
-
-  toggleSettings: () =>
-    this.setState({
-      settings: !s.settings
-    }),
-
-  tones: Object.keys(TONES).map(id => ({
-    label: TONES[id].label,
-
-    select: () => {
-      this.setState(
-        { tone: id },
-        () => this.beep(true)
-      );
-
-      try {
-        localStorage.setItem(
-          "ss-admin-tone",
-          id
-        );
-      } catch (e) {}
-    },
-
-    style:
-      "padding:9px 16px;border-radius:999px;font-size:14px;font-weight:600;cursor:pointer;border:1px solid " +
-      (
-        s.tone === id
-          ? "#48D1CC;background:#48D1CC;color:#08454a"
-          : "#d6e8e8;background:#fff;color:#3d5a5e"
-      )
-  })),
-
-  volume: s.volume,
-  volumeLabel: s.volume + "%",
-
-  onVolume: e => {
-    const v = Number(
-      e.target.value
-    );
-
-    this.setState({
-      volume: v
-    });
-
+    /* Apps Script sleeps between uses and its first call after that can take
+       fifteen seconds. Waking it while the password is still being typed means
+       the login itself lands on a warm server. */
     try {
-      localStorage.setItem(
-        "ss-admin-volume",
-        String(v)
-      );
-    } catch (e2) {}
-  },
+      const ep = window.SS_ORDERS && window.SS_ORDERS.endpoint;
+      if (ep) fetch(ep + "?action=ping", { cache: "no-store" }).catch(() => {});
+    } catch (e) {}
 
-  testSound: () =>
-    this.beep(true),
+    this.refresh(true);
+    /* Poll only while the admin tab is visible; catch up the moment it is
+       shown again. A hidden tab polling every 15 s was pure waste, and it
+       collided with clicks on the same Apps Script endpoint. */
+    this.timer = setInterval(() => {
+      if (!document.hidden) this.refresh(false);
+    }, 1000);
+    this.onVisible = () => { if (!document.hidden) this.refresh(false); };
+    document.addEventListener("visibilitychange", this.onVisible);
 
-  reportOpen: s.report,
+    /* every interaction keeps the audio engine unlocked (the typed password
+       and the login click count) */
+    this.onGesture = () => this.unlockAudio();
+    ["pointerdown", "touchstart", "keydown", "click"].forEach(t =>
+      document.addEventListener(t, this.onGesture, { capture: true, passive: true }));
+  }
 
-  toggleReport: () =>
-    this.setState({
-      report: !s.report
-    }),
+  componentWillUnmount() {
+    clearInterval(this.timer);
+    clearTimeout(this.toastTimer);
+    document.removeEventListener("visibilitychange", this.onVisible);
+    ["pointerdown", "touchstart", "keydown", "click"].forEach(t =>
+      document.removeEventListener(t, this.onGesture, { capture: true }));
+  }
 
-  months: monthKeys.map(k => ({
-    value: k,
-    label: monthLabel(k)
-  })),
+  async refresh(first) {
+    if (!window.SS_ORDERS || !window.SS_ORDERS.isAuthed()) return;
+    /* One list call at a time: a slow reply must not stack up behind itself. */
+    if (this.listing) return;
+    this.listing = true;
+    let orders;
+    try { orders = await window.SS_ORDERS.list(); }
+    catch (e) {
+      console.error("orders:", e);
+      if (/unauthorized/i.test(String(e.message || e))) {
+        window.SS_ORDERS.logout();
+        this.setState({ authed: false, loginErr: "Sesija je istekla — prijavite se ponovo." });
+      } else {
+        /* Never leave the panel in a waiting state: mark it loaded and say
+           what went wrong, so a failed poll cannot look like a stuck screen. */
+        this.setState({ loaded: true, toast: "Porudžbine nisu učitane: " + String(e.message || e) });
+      }
+      return;
+    } finally {
+      this.listing = false;
+    }
 
-  month: month,
+    const known = this.state.orders.map(o => o.id);
+    const fresh = first ? [] : orders.filter(o => known.indexOf(o.id) === -1);
+    this.setState({ orders, loaded: true });
 
-  onMonth: e =>
-    this.setState({
-      month: e.target.value
-    }),
+    if (fresh.length) {
+      this.setState({
+        alert: fresh.length === 1
+          ? "Nova porudžbina #" + fresh[0].id
+          : fresh.length + " novih porudžbina"
+      });
+      this.beep();
+      if (document.title.indexOf("(") !== 0) document.title = "(" + fresh.length + ") Porudžbine";
+    }
+  }
 
-  repOrders: String(sums.orders),
-  repPhotos: String(sums.photos),
-  repTotal: this.dinars(sums.total),
-  repCopies: String(sums.copies),
+  /* Browsers only let a page make sound after the user has touched it. The
+     chime used to create its audio engine inside the poll timer, so on a page
+     left open and waiting the engine was born "suspended" and every new-order
+     chime was silent. Now the engine is created and unlocked on the first
+     click / key / touch anywhere in the admin, and a chime that arrives before
+     that is kept and played on that first interaction. */
+  audio() {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    if (!this.ac) this.ac = new AC();
+    return this.ac;
+  }
 
-  repEmpty:
-    inMonth.length === 0,
+  unlockAudio() {
+    const ac = this.audio();
+    if (!ac) return;
+    const go = () => {
+      if (ac.state !== "running") return;
+      /* one silent sample — iOS needs a real play() inside the gesture */
+      try {
+        const b = ac.createBuffer(1, 1, 22050);
+        const src = ac.createBufferSource();
+        src.buffer = b; src.connect(ac.destination); src.start(0);
+      } catch (e) {}
+      if (this.pendingBeep) { this.pendingBeep = false; this.beep(); }
+    };
+    if (ac.state === "suspended") ac.resume().then(go, () => {});
+    else go();
+  }
 
-  repRows:
-    inMonth
-      .slice()
-      .sort(
-        (a, b) =>
-          new Date(a.created_at) -
-          new Date(b.created_at)
-      )
-      .map(o => ({
-        name:
-          o.full_name || "—",
-        date:
-          this.reportDate(
-            o.created_at
-          ),
-        format:
-          o.photo_format || "",
-        photos:
-          String(
-            o.photo_count || 0
-          ),
-        copies:
-          String(
-            o.copies_total || 0
-          ),
-        price:
-          this.dinars(
-            o.total_price || 0
-          )
-      })),
+  /* Chime built with WebAudio — no audio file to ship or cache. */
+  beep(force) {
+    if (!force && !this.state.sound) return;
+    const level = (this.state.volume / 100);
+    if (level <= 0) return;
+    try {
+      const ac = this.audio();
+      if (!ac) return;
+      if (ac.state !== "running") {
+        /* not unlocked yet: try, and if the browser still refuses, play it
+           on the next interaction instead of dropping it */
+        ac.resume().then(() => {
+          if (ac.state === "running") this.beep(force);
+          else this.pendingBeep = true;
+        }, () => { this.pendingBeep = true; });
+        return;
+      }
+      const tone = TONES[this.state.tone] || TONES.zvono;
+      /* Two detuned sawtooth voices per note, pushed through a compressor:
+         much louder perceived volume than a single wave at the same level,
+         without clipping into noise. The pattern repeats three times. */
+      const out = this.ac.createDynamicsCompressor();
+      out.threshold.value = -18; out.knee.value = 6; out.ratio.value = 8;
+      out.attack.value = 0.002; out.release.value = 0.12;
+      const master = this.ac.createGain();
+      master.gain.value = 1.6 * level;
+      out.connect(master);
+      master.connect(this.ac.destination);
+      const span = tone.notes.reduce((m, n) => Math.max(m, n[1] + n[2]), 0) + 0.25;
+      for (let rep = 0; rep < 3; rep++) {
+        tone.notes.forEach(([freq, at, len]) => {
+          const t = this.ac.currentTime + rep * span + at;
+          [0, 7].forEach(detune => {
+            const osc = this.ac.createOscillator();
+            const gain = this.ac.createGain();
+            osc.type = "sawtooth";
+            osc.frequency.setValueAtTime(freq, t);
+            osc.detune.setValueAtTime(detune, t);
+            gain.gain.setValueAtTime(0.0001, t);
+            gain.gain.exponentialRampToValueAtTime(0.5, t + 0.01);
+            gain.gain.setValueAtTime(0.5, t + len * 0.7);
+            gain.gain.exponentialRampToValueAtTime(0.0001, t + len);
+            osc.connect(gain);
+            gain.connect(out);
+            osc.start(t);
+            osc.stop(t + len + 0.02);
+          });
+        });
+      }
+    } catch (e) {}
+  }
 
-  repFormats:
-    sums.formats.map(f => ({
-      format: f.format,
-      photosLabel:
-        this.plural(
-          f.photos,
-          "fotografija",
-          "fotografije",
-          "fotografija"
-        ) +
-        " · " +
-        this.plural(
-          f.copies,
-          "komad",
-          "komada",
-          "komada"
-        ),
-      totalLabel:
-        this.dinars(f.total)
-    })),
+  async doDelete(order) {
+    this.setState({ confirm: null });
+    const orders = this.state.orders.filter(o => o.id !== order.id);
+    this.setState({ orders });
+    try {
+      await window.SS_ORDERS.remove(order.id);
+      this.say("Porudžbina #" + order.id + " je obrisana.");
+    } catch (e) {
+      console.error("delete:", e);
+      this.say("Brisanje nije uspelo — osvežite stranicu.");
+    }
+  }
 
-  printReport: () =>
-    this.printReport(
-      inMonth,
-      monthLabel(month),
-      sums
-    ),
+  reportDate(iso) {
+    const d = new Date(iso);
+    if (isNaN(d)) return "";
+    return String(d.getDate()).padStart(2, "0") + "." + String(d.getMonth() + 1).padStart(2, "0") + "." + d.getFullYear() + ".";
+  }
 
-  confirmOpen:
-    !!s.confirm,
+  /* Monthly report from the Supabase orders already loaded in the admin:
+     one row per order, then the month's totals, then a per-format summary. */
+  printReport(rows, label, sums) {
+    const esc = t => String(t).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+    const orderRows = rows.slice().sort((a, b) => new Date(a.created_at) - new Date(b.created_at)).map(o =>
+      "<tr><td>" + esc(o.full_name || "—") + "</td><td>" + esc(this.reportDate(o.created_at)) +
+      "</td><td>" + esc(o.photo_format || "") + "</td><td class='r'>" + (o.photo_count || 0) +
+      "</td><td class='r'>" + (o.copies_total || 0) + "</td><td class='r'>" + this.dinars(o.total_price || 0) + "</td></tr>").join("");
+    const body = sums.formats.map(f =>
+      "<tr><td>" + esc(f.format) + "</td><td class='r'>" + f.orders +
+      "</td><td class='r'>" + f.photos + "</td><td class='r'>" + f.copies +
+      "</td><td class='r'>" + this.dinars(f.total) + "</td></tr>").join("");
 
-  confirmTitle:
-    s.confirm
-      ? "Obrisati porudžbinu #" +
-        s.confirm.id +
-        "?"
-      : "",
+    const html = "<!DOCTYPE html><html><head><meta charset='utf-8'><title>Studio Square — " + esc(label) +
+      "</title><style>" +
+      "@page{margin:18mm}" +
+      "body{font-family:Georgia,serif;color:#15262a;margin:0}" +
+      "h1{font-size:24pt;margin:0 0 2pt}" +
+      "p.sub{margin:0 0 22pt;font-size:11pt;color:#5b787c}" +
+      ".sums{display:flex;gap:28pt;margin-bottom:24pt;font-size:11pt}" +
+      ".sums b{display:block;font-size:20pt;margin-top:2pt}" +
+      "h2{font-size:13pt;margin:0 0 8pt}" +
+      "table{width:100%;border-collapse:collapse;font-size:10.5pt}" +
+      "th{text-align:left;border-bottom:1.5pt solid #15262a;padding:6pt 4pt}" +
+      "th.r,td.r{text-align:right}" +
+      "td{border-bottom:.5pt solid #cfe0e0;padding:6pt 4pt}" +
+      "tfoot td{border-top:1.5pt solid #15262a;border-bottom:0;font-weight:700}" +
+      "p.foot{margin-top:24pt;font-size:9pt;color:#5b787c}" +
+      "</style></head><body>" +
+      "<h1>Studio Square</h1><p class='sub'>Mesečni izveštaj — " + esc(label) + "</p>" +
+      "<div class='sums'><div>Porudžbina<b>" + sums.orders + "</b></div>" +
+      "<div>Fotografija<b>" + sums.photos + "</b></div>" +
+      "<div>Komada<b>" + sums.copies + "</b></div>" +
+      "<div>Prihod<b>" + this.dinars(sums.total) + "</b></div></div>" +
+      "<h2>Porudžbine</h2>" +
+      "<table><thead><tr><th>Ime i prezime</th><th>Datum</th><th>Format</th>" +
+      "<th class='r'>Fotografija</th><th class='r'>Kopija</th><th class='r'>Cena</th></tr></thead>" +
+      "<tbody>" + orderRows + "</tbody>" +
+      "<tfoot><tr><td>Ukupno: " + sums.orders + " porudžbina</td><td></td><td></td><td class='r'>" + sums.photos +
+      "</td><td class='r'>" + sums.copies + "</td><td class='r'>" + this.dinars(sums.total) + "</td></tr></tfoot></table>" +
+      "<h2 style='margin-top:22pt'>Po formatima</h2>" +
+      "<table><thead><tr><th>Format</th><th class='r'>Porudžbina</th>" +
+      "<th class='r'>Fotografija</th><th class='r'>Komada</th><th class='r'>Prihod</th></tr></thead>" +
+      "<tbody>" + body + "</tbody>" +
+      "<tfoot><tr><td>Ukupno</td><td class='r'>" + sums.orders + "</td><td class='r'>" + sums.photos +
+      "</td><td class='r'>" + sums.copies + "</td><td class='r'>" + this.dinars(sums.total) + "</td></tr></tfoot></table>" +
+      "<p class='foot'>Izveštaj generisan " + new Date().toLocaleDateString("sr-RS") + ".</p>" +
+      "</body></html>";
 
-  confirmBody:
-    "Porudžbina i njene fotografije biće trajno obrisane, i iz Drive foldera kada bude povezan. Ovo se ne može poništiti.",
+    const w = window.open("", "_blank");
+    if (!w) { this.say("Dozvolite iskačuće prozore da biste sačuvali PDF."); return; }
+    w.document.write(html);
+    w.document.close();
+    w.focus();
+    setTimeout(() => w.print(), 350);
+  }
 
-  confirmDelete: () =>
-    this.doDelete(s.confirm),
+  say(text) {
+    clearTimeout(this.toastTimer);
+    this.setState({ toast: text });
+    this.toastTimer = setTimeout(() => this.setState({ toast: "" }), 4200);
+  }
 
-  cancelDelete: () =>
-    this.setState({
-      confirm: null
-    }),
+  /* Viber deep link with a prepared message. Opened synchronously inside the
+     click, before any network call, so the browser does not block it. */
+  viberLink(order) {
+    let d = String(order.phone || "").replace(/[^0-9]/g, "");
+    if (!d) return "";
+    if (d.indexOf("00") === 0) d = d.slice(2);
+    else if (d.indexOf("0") === 0) d = "381" + d.slice(1);
+    else if (d.indexOf("381") !== 0 && d.length <= 9) d = "381" + d;
+    const text = order.address
+      ? "Poštovani, Vaša porudžbina u fotografskoj radnji Studio Square je gotova i biće poslata putem pošte."
+      : "Poštovani, Vaša porudžbina u fotografskoj radnji Studio Square je gotova i spremna za preuzimanje.";
+    return "viber://chat?number=%2B" + d + "&draft=" + encodeURIComponent(text);
+  }
 
-  alertOn:
-    !!s.alert,
+  openViber(order) {
+    const link = this.viberLink(order);
+    if (!link) return;
+    try { window.location.href = link; } catch (e) { console.warn("viber:", e); }
+  }
 
-  alertText:
-    s.alert || "",
+  async change(order, status) {
+    if (order.status === status) return;
+    if (status === "gotovo") this.openViber(order);
+    const orders = this.state.orders.map(o => o.id === order.id ? Object.assign({}, o, { status }) : o);
+    this.setState({ orders });
+    try { await window.SS_ORDERS.setStatus(order.id, status); }
+    catch (e) { console.error("status:", e); this.say("Status nije sačuvan — pokušajte ponovo."); return; }
 
-  dismissAlert: () => {
-    this.setState({
-      alert: null
-    });
+    if (status === "gotovo") {
+      const res = await window.SS_ORDERS.notifyReady(order);
+      this.say(res.shown
+        ? "Obaveštenje poslato kupcu."
+        : "Obaveštenja nisu dozvoljena u pregledaču — poruka: " + res.body);
+    }
+  }
 
-    document.title =
-      "Porudžbine";
-  },
+  async togglePhotos(order) {
+    const open = Object.assign({}, this.state.open);
+    if (open[order.id]) { delete open[order.id]; this.setState({ open }); return; }
+    open[order.id] = true;
+    this.setState({ open });
+    /* reload when the last attempt found nothing — files may have arrived since */
+    const had = this.state.photos[order.id];
+    if (had && had.length) return;
+    try {
+      const list = await window.SS_ORDERS.listPhotos(order);
+      this.setState({ photos: Object.assign({}, this.state.photos, { [order.id]: list }) });
+    } catch (e) {
+      console.error("photos:", e);
+      this.say("Fotografije nije moguće učitati.");
+    }
+  }
 
-  filters:
-    [tab("sve", "Sve")].concat(
-      STATUSES.map(st =>
-        tab(st.id, st.label)
-      )
-    ),
+  /* mode "originali": one file per photo.
+     mode "stampa": each photo repeated as many times as ordered, so the
+     folder can go straight to the lab — originals are never modified. */
+  async downloadZip(order, mode) {
+    const list = this.state.photos[order.id] || [];
+    if (!list.length) return;
+    const key = order.id + ":" + mode;
+    this.setState({ zipping: Object.assign({}, this.state.zipping, { [key]: true }) });
+    try {
+      const blobs = [];
+      for (const p of list) blobs.push(await (await fetch(p.url)).blob());
 
-  isEmpty:
-    s.loaded &&
-    !visible.length,
+      const files = [];
+      list.forEach((p, i) => {
+        const copies = mode === "stampa" ? (p.copies || 1) : 1;
+        const base = p.name.replace(/\.jpe?g$/i, "");
+        for (let c = 1; c <= copies; c++) {
+          files.push({
+            name: mode === "stampa" && copies > 1 ? base + "_kopija-" + c + ".jpg" : p.name,
+            blob: blobs[i]
+          });
+        }
+      });
 
-  toast:
-    !!s.toast,
+      const fmt = String(order.photo_format).replace(/×/g, "x").replace(/\s+/g, " ").trim();
+      const who = String(order.full_name || "Porudzbina " + order.id)
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^A-Za-z0-9 ]/g, "").replace(/\s+/g, " ").trim();
+      const base = who + " - " + fmt;
+      const zip = await window.SS_ZIP.make(files);
+      window.SS_ZIP.save(zip, mode === "stampa" ? base + ".zip" : base + " (originali).zip");
+      if (mode === "stampa") this.say("Paket za štampu: " + files.length + " listova, format " + order.photo_format + ".");
+    } catch (e) {
+      console.error("zip:", e);
+      this.say("Preuzimanje nije uspelo.");
+    }
+    const z = Object.assign({}, this.state.zipping);
+    delete z[key];
+    this.setState({ zipping: z });
+  }
 
-  toastText:
-    s.toast,
+  dinars(n) { return new Intl.NumberFormat("sr-RS").format(n) + " RSD"; }
 
-  visible:
-    visible.map(o => {
-      const isOpen =
-        !!s.open[o.id];
+  ago(iso) {
+    const mins = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
+    if (mins < 1) return "upravo sada";
+    if (mins < 60) return "pre " + mins + " min";
+    const h = Math.round(mins / 60);
+    if (h < 24) return "pre " + h + " h";
+    return "pre " + Math.round(h / 24) + " d";
+  }
 
-      const list =
-        s.photos[o.id];
+  plural(n, one, few, many) {
+    const d = n % 10, dd = n % 100;
+    if (d === 1 && dd !== 11) return n + " " + one;
+    if (d >= 2 && d <= 4 && (dd < 12 || dd > 14)) return n + " " + few;
+    return n + " " + many;
+  }
 
-      const next = [{
-        label:
-          isOpen
-            ? "Sakrij fotografije"
-            : "Preuzmi fotografije",
+  renderVals() {
+    const s = this.state;
+    const counts = { sve: s.orders.length };
+    STATUSES.forEach(st => { counts[st.id] = s.orders.filter(o => o.status === st.id).length; });
 
-        run: () =>
-          this.togglePhotos(o),
-
-        style:
-          btn(false)
-      }];
-
-      const at =
-        STATUSES.findIndex(
-          st =>
-            st.id === o.status
-        );
-
-      const steps =
-        STATUSES.map(
-          (st, i) => {
-            const done =
-              i < at;
-
-            const active =
-              i === at;
-
-            const fill =
-              done
-                ? "#0e9c9c"
-                : active
-                  ? "#48D1CC"
-                  : "#fff";
-
-            const edge =
-              done || active
-                ? fill
-                : "#cfe6e6";
-
-            const ink =
-              done
-                ? "#fff"
-                : active
-                  ? "#08454a"
-                  : "#9fb8bb";
-
-            return {
-              label: st.label,
-
-              mark:
-                done
-                  ? "✓"
-                  : active
-                    ? "●"
-                    : "",
-
-              run: () =>
-                this.change(
-                  o,
-                  st.id
-                ),
-
-              wrapStyle:
-                "flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;position:relative;min-width:0",
-
-              dotStyle:
-                "width:28px;height:28px;border-radius:999px;display:flex;align-items:center;justify-content:center;" +
-                "font-size:14px;font-weight:700;line-height:1;cursor:pointer;position:relative;z-index:1;" +
-                "border:2px solid " +
-                edge +
-                ";background:" +
-                fill +
-                ";color:" +
-                ink,
-
-              labelStyle:
-                "font-size:12px;text-align:center;line-height:1.3;color:" +
-                (
-                  active
-                    ? "#15262a;font-weight:700"
-                    : done
-                      ? "#0a6b6b"
-                      : "#5b787c"
-                ),
-
-              lineStyle:
-                i ===
-                STATUSES.length - 1
-                  ? "display:none"
-                  : "position:absolute;top:13px;left:50%;right:-50%;height:2px;background:" +
-                    (
-                      i < at
-                        ? "#0e9c9c"
-                        : "#dceaea"
-                    )
-            };
-          }
-        );
-
+    const tab = (id, label) => {
+      const n = counts[id] || 0;
+      const on = s.filter === id;
+      const hot = id === "novo" && n > 0;
       return {
-        id: o.id,
-        full_name:
-          o.full_name,
-        phone:
-          o.phone,
+        label: label,
+        count: n,
+        select: () => this.setState({ filter: id }),
+        style: "display:inline-flex;align-items:center;gap:8px;padding:10px 14px 10px 18px;border-radius:999px;" +
+          "font-size:14px;font-weight:600;cursor:pointer;border:1px solid " +
+          (on ? "#48D1CC;background:#48D1CC;color:#08454a" : "#d6e8e8;background:#fff;color:#3d5a5e"),
+        badgeStyle: "min-width:24px;height:24px;padding:0 7px;display:inline-flex;align-items:center;justify-content:center;" +
+          "border-radius:999px;font-size:13px;font-weight:700;line-height:1;" +
+          (hot ? "background:#c2453f;color:#fff" : on ? "background:rgba(8,69,74,.14);color:#08454a" : "background:#e6f7f7;color:#3d5a5e")
+      };
+    };
 
-        telHref:
-          "tel:" +
-          String(o.phone).replace(
-            /[^+\d]/g,
-            ""
-          ),
+    /* Months present in the data, newest first. */
+    const monthKeys = [];
+    s.orders.forEach(o => {
+      const d = new Date(o.created_at);
+      const key = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
+      if (monthKeys.indexOf(key) === -1) monthKeys.push(key);
+    });
+    monthKeys.sort().reverse();
+    const month = s.month && monthKeys.indexOf(s.month) !== -1 ? s.month : monthKeys[0] || "";
+    const monthLabel = k => k ? MONTHS_SR[Number(k.slice(5)) - 1] + " " + k.slice(0, 4) : "";
+    const inMonth = s.orders.filter(o => {
+      const d = new Date(o.created_at);
+      return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") === month;
+    });
+    const byFormat = {};
+    inMonth.forEach(o => {
+      const f = byFormat[o.photo_format] || (byFormat[o.photo_format] = { format: o.photo_format, orders: 0, photos: 0, copies: 0, total: 0 });
+      f.orders += 1;
+      f.photos += o.photo_count;
+      f.copies += o.copies_total;
+      f.total += o.total_price;
+    });
+    const sums = {
+      orders: inMonth.length,
+      photos: inMonth.reduce((n, o) => n + o.photo_count, 0),
+      copies: inMonth.reduce((n, o) => n + o.copies_total, 0),
+      total: inMonth.reduce((n, o) => n + o.total_price, 0),
+      formats: Object.keys(byFormat).sort().map(k => byFormat[k])
+    };
 
-        photo_format:
-          o.photo_format,
+    const visible = s.orders.filter(o => s.filter === "sve" || o.status === s.filter);
 
-        copiesLabel:
-          this.plural(
-            o.copies_total,
-            "komad",
-            "komada",
-            "komada"
-          ),
+    const pill = st => {
+      const bg = st === "novo" ? "#48D1CC" : st === "priprema" ? "#fde8c9" : "#d8f0e2";
+      return "padding:5px 13px;border-radius:999px;background:" + bg + ";color:#15262a;font-size:12px;font-weight:700";
+    };
+    const btn = primary => "padding:10px 16px;border-radius:999px;font-size:14px;font-weight:600;cursor:pointer;border:1px solid " +
+      (primary ? "#48D1CC;background:#48D1CC;color:#08454a" : "#d6e8e8;background:#fff;color:#3d5a5e");
 
-        photosLabel:
-          this.plural(
-            o.photo_count,
-            "fotografija",
-            "fotografije",
-            "fotografija"
-          ),
-
-        deliveryLabel:
-          o.address
-            ? "Dostava"
-            : "Preuzimanje",
-
-        deliveryValue:
-          o.address ||
-          "U radnji",
-
-        totalLabel:
-          this.dinars(
-            o.total_price
-          ),
-
-        note:
-          o.note,
-
-        hasNote:
-          !!o.note,
-
-        ago:
-          this.ago(
-            o.created_at
-          ),
-
-        statusLabel:
-          (
-            STATUSES.find(
-              st =>
-                st.id === o.status
-            ) || {}
-          ).label ||
-          o.status,
-
-        pillStyle:
-          pill(o.status),
-
-        actions:
-          next,
-
-        steps:
-          steps,
-
-        askDelete: () =>
+    return {
+      locked: !s.authed,
+      unlocked: s.authed,
+      wrapStyle: "min-height:100vh;max-width:940px;margin:0 auto;padding:32px 20px 60px;display:flex;flex-direction:column;gap:20px",
+      pw: s.pw,
+      loginErr: s.loginErr,
+      loggingIn: s.loggingIn,
+      loginLabel: s.loggingIn ? "Prijava…" : "Prijavi se",
+      onPw: e => this.setState({ pw: e.target.value }),
+      onLogin: async e => {
+        e.preventDefault();
+        if (this.state.loggingIn) return;
+        this.setState({ loggingIn: true, loginErr: "" });
+        try {
+          /* The login reply already carries the first page of orders, so the
+             panel opens on that one round trip — no verification call, no
+             loading screen. */
+          const first = await window.SS_ORDERS.login(this.state.pw);
+          const orders = (first && first.orders) || [];
+          /* Open the panel on the login reply itself. If that reply already
+             carried the orders we are done; otherwise they arrive a moment
+             later and the panel is usable in the meantime. */
           this.setState({
-            confirm: o
-          }),
+            authed: true, pw: "", loggingIn: false,
+            orders: orders, loaded: orders.length > 0
+          });
+          this.refresh(true);
+        } catch (err) {
+          const msg = String(err.message || err);
+          window.SS_ORDERS.logout();
+          this.setState({
+            loggingIn: false,
+            loginErr: /unauthorized/i.test(msg)
+              ? "Server je odbio token — ponovo deploy-ujte Apps Script (New deployment)."
+              : msg
+          });
+        }
+      },
+      onLogout: () => {
+        window.SS_ORDERS.logout();
+        this.setState({ authed: false, orders: [], pw: "", loginErr: "" });
+      },
+      sourceLabel: "Uživo",
+      soundLabel: s.sound ? "🔔 Zvuk uključen" : "🔕 Zvuk isključen",
+      soundStyle: "padding:11px 18px;border-radius:999px;font-size:14px;font-weight:600;cursor:pointer;border:1px solid " +
+        (s.sound ? "#48D1CC;background:#48D1CC;color:#08454a" : "#d6e8e8;background:#fff;color:#3d5a5e"),
+      toggleSound: () => {
+        const next = !this.state.sound;
+        if (!next) this.pendingBeep = false;
+        try { localStorage.setItem("ss-admin-sound", next ? "1" : "0"); } catch (e) {}
+        this.setState({ sound: next }, () => { if (next) this.beep(); });
+      },
 
-        photosOpen:
-          isOpen,
+      settingsOpen: s.settings,
+      toggleSettings: () => this.setState({ settings: !s.settings }),
+      tones: Object.keys(TONES).map(id => ({
+        label: TONES[id].label,
+        select: () => {
+          this.setState({ tone: id }, () => this.beep(true));
+          try { localStorage.setItem("ss-admin-tone", id); } catch (e) {}
+        },
+        style: "padding:9px 16px;border-radius:999px;font-size:14px;font-weight:600;cursor:pointer;border:1px solid " +
+          (s.tone === id ? "#48D1CC;background:#48D1CC;color:#08454a" : "#d6e8e8;background:#fff;color:#3d5a5e")
+      })),
+      volume: s.volume,
+      volumeLabel: s.volume + "%",
+      onVolume: e => {
+        const v = Number(e.target.value);
+        this.setState({ volume: v });
+        try { localStorage.setItem("ss-admin-volume", String(v)); } catch (e2) {}
+      },
+      testSound: () => this.beep(true),
 
-        photos:
-          (list || []).map(
-            (p, i) => ({
-              name:
-                p.name,
+      reportOpen: s.report,
+      toggleReport: () => this.setState({ report: !s.report }),
+      months: monthKeys.map(k => ({ value: k, label: monthLabel(k) })),
+      month: month,
+      onMonth: e => this.setState({ month: e.target.value }),
+      repOrders: String(sums.orders),
+      repPhotos: String(sums.photos),
+      repTotal: this.dinars(sums.total),
+      repCopies: String(sums.copies),
+      repEmpty: inMonth.length === 0,
+      repRows: inMonth.slice().sort((a, b) => new Date(a.created_at) - new Date(b.created_at)).map(o => ({
+        name: o.full_name || "—",
+        date: this.reportDate(o.created_at),
+        format: o.photo_format || "",
+        photos: String(o.photo_count || 0),
+        copies: String(o.copies_total || 0),
+        price: this.dinars(o.total_price || 0)
+      })),
+      repFormats: sums.formats.map(f => ({
+        format: f.format,
+        photosLabel: this.plural(f.photos, "fotografija", "fotografije", "fotografija") + " · " +
+          this.plural(f.copies, "komad", "komada", "komada"),
+        totalLabel: this.dinars(f.total)
+      })),
+      printReport: () => this.printReport(inMonth, monthLabel(month), sums),
 
-              url:
-                p.download ||
-                p.url,
+      confirmOpen: !!s.confirm,
+      confirmTitle: s.confirm ? "Obrisati porudžbinu #" + s.confirm.id + "?" : "",
+      confirmBody: "Porudžbina i njene fotografije biće trajno obrisane, i iz Drive foldera kada bude povezan. Ovo se ne može poništiti.",
+      confirmDelete: () => this.doDelete(s.confirm),
+      cancelDelete: () => this.setState({ confirm: null }),
 
-              label:
-                "Fotografija " +
-                (i + 1) +
-                " — ×" +
-                (p.copies || 1),
+      alertOn: !!s.alert,
+      alertText: s.alert || "",
+      dismissAlert: () => { this.setState({ alert: null }); document.title = "Porudžbine"; },
 
-              title:
-                p.name +
-                " — " +
-                (p.copies || 1) +
-                " kom",
+      filters: [tab("sve", "Sve")].concat(STATUSES.map(st => tab(st.id, st.label))),
+      isEmpty: s.loaded && !visible.length,
 
-              copiesLabel:
-                "×" +
-                (p.copies || 1),
+      toast: !!s.toast,
+      toastText: s.toast,
 
-              copiesStyle:
-                "position:absolute;right:6px;bottom:6px;padding:2px 8px;border-radius:999px;" +
-                "background:rgba(8,69,74,.82);color:#fff;font-size:11px;font-weight:700;line-height:1.5",
+      visible: visible.map(o => {
+        const isOpen = !!s.open[o.id];
+        const list = s.photos[o.id];
+        const next = [{
+          label: isOpen ? "Sakrij fotografije" : "Preuzmi fotografije",
+          run: () => this.togglePhotos(o),
+          style: btn(false)
+        }];
 
-              thumbStyle:
-                "position:relative;display:block;width:100%;" +
-                THUMB_RATIO +
-                "border-radius:12px;background:#e6f7f7 center/cover no-repeat url('" +
-                p.url +
-                "')"
-            })
-          ),
-
-        photosHeading:
-          !list
+        const at = STATUSES.findIndex(st => st.id === o.status);
+        const steps = STATUSES.map((st, i) => {
+          const done = i < at, active = i === at;
+          const fill = done ? "#0e9c9c" : active ? "#48D1CC" : "#fff";
+          const edge = done || active ? fill : "#cfe6e6";
+          const ink = done ? "#fff" : active ? "#08454a" : "#9fb8bb";
+          return {
+            label: st.label,
+            mark: done ? "✓" : active ? "●" : "",
+            run: () => this.change(o, st.id),
+            wrapStyle: "flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;position:relative;min-width:0",
+            dotStyle: "width:28px;height:28px;border-radius:999px;display:flex;align-items:center;justify-content:center;" +
+              "font-size:14px;font-weight:700;line-height:1;cursor:pointer;position:relative;z-index:1;" +
+              "border:2px solid " + edge + ";background:" + fill + ";color:" + ink,
+            labelStyle: "font-size:12px;text-align:center;line-height:1.3;color:" +
+              (active ? "#15262a;font-weight:700" : done ? "#0a6b6b" : "#5b787c"),
+            lineStyle: i === STATUSES.length - 1
+              ? "display:none"
+              : "position:absolute;top:13px;left:50%;right:-50%;height:2px;background:" + (i < at ? "#0e9c9c" : "#dceaea")
+          };
+        });
+        return {
+          id: o.id,
+          full_name: o.full_name,
+          phone: o.phone,
+          telHref: "tel:" + String(o.phone).replace(/[^+\d]/g, ""),
+          photo_format: o.photo_format,
+          copiesLabel: this.plural(o.copies_total, "komad", "komada", "komada"),
+          photosLabel: this.plural(o.photo_count, "fotografija", "fotografije", "fotografija"),
+          deliveryLabel: o.address ? "Dostava" : "Preuzimanje",
+          deliveryValue: o.address || "U radnji",
+          totalLabel: this.dinars(o.total_price),
+          note: o.note,
+          hasNote: !!o.note,
+          ago: this.ago(o.created_at),
+          statusLabel: (STATUSES.find(st => st.id === o.status) || {}).label || o.status,
+          pillStyle: pill(o.status),
+          actions: next,
+          steps: steps,
+          askDelete: () => this.setState({ confirm: o }),
+          photosOpen: isOpen,
+          photos: (list || []).map((p, i) => ({
+            name: p.name, url: p.download || p.url,
+            label: "Fotografija " + (i + 1) + " — ×" + (p.copies || 1),
+            title: p.name + " — " + (p.copies || 1) + " kom",
+            copiesLabel: "×" + (p.copies || 1),
+            copiesStyle: "position:absolute;right:6px;bottom:6px;padding:2px 8px;border-radius:999px;" +
+              "background:rgba(8,69,74,.82);color:#fff;font-size:11px;font-weight:700;line-height:1.5",
+            thumbStyle: "position:relative;display:block;width:100%;" + THUMB_RATIO + "border-radius:12px;background:#e6f7f7 center/cover no-repeat url('" + p.url + "')"
+          })),
+          photosHeading: !list
             ? "Učitavanje fotografija…"
             : !list.length
-              ? "Trenutno nema pronađenih fotografija za ovu porudžbinu (naručeno: " +
-                o.photo_count +
-                ")."
-              : this.plural(
-                  list.length,
-                  "fotografija",
-                  "fotografije",
-                  "fotografija"
-                ) +
-                " pronađeno" +
-                (
-                  o.photo_count &&
-                  o.photo_count !==
-                    list.length
-                    ? " od " +
-                      o.photo_count +
-                      " naručenih"
-                    : ""
-                ) +
-                " · " +
-                this.plural(
-                  list.reduce(
-                    (n, p) =>
-                      n +
-                      (p.copies || 1),
-                    0
-                  ),
-                  "komad",
-                  "komada",
-                  "komada"
-                ),
-
-        photosHint:
-          "Paket za štampu ponavlja svaku fotografiju onoliko puta koliko je naručena. Klik na sličicu preuzima original.",
-
-        printLabel:
-          s.zipping[
-            o.id + ":stampa"
-          ]
-            ? "Pripremam…"
-            : "🖨️ Pripremi za štampu",
-
-        preparePrint: () => {
-          if (
-            o.status ===
-            "novo"
-          ) {
-            this.change(
-              o,
-              "priprema"
-            );
-          }
-
-          return this.downloadZip(
-            o,
-            "stampa"
-          );
-        },
-
-        zipLabel:
-          s.zipping[
-            o.id + ":originali"
-          ]
-            ? "Pakujem…"
-            : "Preuzmi sve (ZIP)",
-
-        downloadAll: () =>
-          this.downloadZip(
-            o,
-            "originali"
-          ),
-
-        cardStyle:
-          "display:flex;flex-direction:column;gap:14px;padding:20px;border-radius:24px;background:#f7fdfd;border:1px solid " +
-          (
-            o.status === "novo"
-              ? "#48D1CC"
-              : "#c9eded"
-          )
-      };
-    })
-};
-
+              ? "Trenutno nema pronađenih fotografija za ovu porudžbinu (naručeno: " + o.photo_count + ")."
+              : this.plural(list.length, "fotografija", "fotografije", "fotografija") + " pronađeno" +
+                (o.photo_count && o.photo_count !== list.length ? " od " + o.photo_count + " naručenih" : "") + " · " +
+                this.plural(list.reduce((n, p) => n + (p.copies || 1), 0), "komad", "komada", "komada"),
+          photosHint: "Paket za štampu ponavlja svaku fotografiju onoliko puta koliko je naručena. Klik na sličicu preuzima original.",
+          printLabel: s.zipping[o.id + ":stampa"] ? "Pripremam…" : "🖨️ Pripremi za štampu",
+          preparePrint: () => {
+            /* Preparing the print pack IS the start of work, so the order
+               moves to "U pripremi" on its own. */
+            if (o.status === "novo") this.change(o, "priprema");
+            return this.downloadZip(o, "stampa");
+          },
+          zipLabel: s.zipping[o.id + ":originali"] ? "Pakujem…" : "Preuzmi sve (ZIP)",
+          downloadAll: () => this.downloadZip(o, "originali"),
+          cardStyle: "display:flex;flex-direction:column;gap:14px;padding:20px;border-radius:24px;background:#f7fdfd;border:1px solid " +
+            (o.status === "novo" ? "#48D1CC" : "#c9eded")
+        };
+      })
+    };
+  }
 }
-}
+
 </script>
-
-</body> </html>
+</body>
+</html>
