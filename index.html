@@ -169,6 +169,18 @@
 
 
 
+  <sc-if value="{{ showUpload }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;top:0;right:0;bottom:0;left:0;z-index:55;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(8,69,74,.45)">
+      <div role="status" aria-live="polite" style="width:100%;max-width:420px;display:flex;flex-direction:column;gap:14px;padding:26px 22px;border-radius:24px;background:#fff;box-shadow:0 18px 50px rgba(8,69,74,.25);text-align:center">
+        <span style="font-family:var(--font-heading);font-size:22px;font-weight:700;color:#15262a">{{ upText }}</span>
+        <div style="height:12px;border-radius:999px;background:#e6f7f7;overflow:hidden">
+          <div style="height:100%;border-radius:999px;background:#48D1CC;transition:width .3s ease;width:{{ upPct }}"></div>
+        </div>
+        <span style="font-size:14px;line-height:1.5;color:#3d5a5e">{{ t.upWarn }}</span>
+      </div>
+    </div>
+  </sc-if>
+
   <sc-if value="{{ upErr }}" hint-placeholder-val="{{ false }}">
     <div style="position:fixed;top:0;right:0;bottom:0;left:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(8,69,74,.55)">
       <div style="width:min(100%,380px);display:flex;flex-direction:column;align-items:center;gap:14px;padding:30px 24px;border-radius:28px;background:#fff;text-align:center">
@@ -397,7 +409,7 @@ const STR = {
     fName: "Ime i prezime", phName: "Marija Petrović", fPhone: "Telefon",
     fAddress: "Adresa za dostavu", phAddress: "Ulica i broj, grad, poštanski broj",
     fNote: "Napomena", phNote: "",
-    srcDevice: "Računar ili telefon", close: "Zatvori", pickSource: "Odakle dodajete fotografije?", leadTime: "Rok izrade je 1 dan", sending: "Slanje u toku…", uploadingTitle: "Šaljemo fotografije", uploadingHint: "Ne zatvarajte stranicu dok se slanje ne završi.", uploadFailTitle: "Slanje nije uspelo", uploadFailBody: "Fotografije nisu sačuvane. Pokušajte ponovo ili nas pozovite — porudžbinu primamo i telefonom.", retry: "Pokušaj ponovo", callUs: "Pozovite nas", promoTitle: "Za porudžbine od 100 ili više fotografija|važe snižene cene:", bulkBadge: "Akcijska cena za 100+ fotografija je primenjena", ticker: "AKCIJA • Poruči 100+ fotografija i ostvari popust •",
+    srcDevice: "Računar ili telefon", close: "Zatvori", pickSource: "Odakle dodajete fotografije?", leadTime: "Rok izrade je 1 dan", upProgress: "Šaljemo fotografije:", upWarn: "Ne zatvarajte aplikaciju i ne napuštajte stranicu dok se slanje ne završi.", sending: "Slanje u toku…", uploadingTitle: "Šaljemo fotografije", uploadingHint: "Ne zatvarajte stranicu dok se slanje ne završi.", uploadFailTitle: "Slanje nije uspelo", uploadFailBody: "Fotografije nisu sačuvane. Pokušajte ponovo ili nas pozovite — porudžbinu primamo i telefonom.", retry: "Pokušaj ponovo", callUs: "Pozovite nas", promoTitle: "Za porudžbine od 100 ili više fotografija|važe snižene cene:", bulkBadge: "Akcijska cena za 100+ fotografija je primenjena", ticker: "AKCIJA • Poruči 100+ fotografija i ostvari popust •",
     socialHelp: "Otvorite naš profil, sačuvajte željene fotografije na svoj telefon ili računar, a zatim ih dodajte preko opcije „Računar ili telefon“.",
     socialOpenIg: "Otvori Instagram", socialOpenFb: "Otvori Facebook",
     pickupNote: "Za Novi Sad i okolinu do 40 km — porudžbinu možete preuzeti lično.",
@@ -419,7 +431,7 @@ const STR = {
     fName: "Full name", phName: "Maria Petrovic", fPhone: "Phone",
     fAddress: "Delivery address", phAddress: "Street and number, city, postal code",
     fNote: "Note", phNote: "",
-    srcDevice: "Computer or phone", close: "Close", pickSource: "Where are the photos from?", leadTime: "Ready in 1 day", sending: "Sending…", uploadingTitle: "Uploading photos", uploadingHint: "Please keep this page open until the upload finishes.", uploadFailTitle: "Upload failed", uploadFailBody: "Your photos were not saved. Please try again or call us — we take orders by phone too.", retry: "Try again", callUs: "Call us", promoTitle: "Orders of 100 photos or more|get reduced prices:", bulkBadge: "Bulk price for 100+ photos applied", ticker: "SALE • Order 100+ photos and get a discount •",
+    srcDevice: "Computer or phone", close: "Close", pickSource: "Where are the photos from?", leadTime: "Ready in 1 day", upProgress: "Uploading photos:", upWarn: "Please do not close the app or leave this page until the upload finishes.", sending: "Sending…", uploadingTitle: "Uploading photos", uploadingHint: "Please keep this page open until the upload finishes.", uploadFailTitle: "Upload failed", uploadFailBody: "Your photos were not saved. Please try again or call us — we take orders by phone too.", retry: "Try again", callUs: "Call us", promoTitle: "Orders of 100 photos or more|get reduced prices:", bulkBadge: "Bulk price for 100+ photos applied", ticker: "SALE • Order 100+ photos and get a discount •",
     socialHelp: "Open our profile, save the photos you want to your phone or computer, then add them with the “Computer or phone” option.",
     socialOpenIg: "Open Instagram", socialOpenFb: "Open Facebook",
     pickupNote: "For Novi Sad and up to 40 km around — you can collect your order in person.",
@@ -850,6 +862,9 @@ class Component extends DCLogic {
       total: this.dinars(total),
 
       cannotSubmit: !ready || !!s.uploading,
+      showUpload: !!s.uploading,
+      upText: s.uploading ? t.upProgress + " " + s.uploading.done + " / " + s.uploading.total : "",
+      upPct: s.uploading && s.uploading.total ? Math.round(100 * s.uploading.done / s.uploading.total) + "%" : "0%",
       submitLabel: t.submit,
       submitStyle: [
         "border:0;border-radius:999px;padding:17px 24px;font-family:var(--font-body);font-size:17px;font-weight:700;width:100%",

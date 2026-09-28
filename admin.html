@@ -655,13 +655,34 @@ class Component extends DCLogic {
       const blobs = [];
       for (const p of list) blobs.push(await (await fetch(p.url)).blob());
 
+      /* Every entry gets a unique name — two picks of the same photo share a
+         file name, and most unzip tools silently overwrite a repeated name,
+         so a 160-sheet pack would come out with fewer files.
+         "Originali" holds each distinct photo once: a photo the customer
+         picked twice (same name, same bytes) appears a single time. */
       const files = [];
+      const used = {};
+      const unique = (name) => {
+        let n = name, k = 2;
+        while (used[n.toLowerCase()]) n = name.replace(/\.jpe?g$/i, "") + "_" + (k++) + ".jpg";
+        used[n.toLowerCase()] = true;
+        return n;
+      };
+      const seen = {};
       list.forEach((p, i) => {
-        const copies = mode === "stampa" ? (p.copies || 1) : 1;
+        const plain = String(p.name).replace(/^\d{4}-/, "");
+        if (mode !== "stampa") {
+          const sig = plain.toLowerCase() + "|" + blobs[i].size;
+          if (seen[sig]) return;
+          seen[sig] = true;
+          files.push({ name: unique(plain), blob: blobs[i] });
+          return;
+        }
+        const copies = p.copies || 1;
         const base = p.name.replace(/\.jpe?g$/i, "");
         for (let c = 1; c <= copies; c++) {
           files.push({
-            name: mode === "stampa" && copies > 1 ? base + "_kopija-" + c + ".jpg" : p.name,
+            name: unique(copies > 1 ? base + "_kopija-" + c + ".jpg" : p.name),
             blob: blobs[i]
           });
         }
@@ -674,7 +695,9 @@ class Component extends DCLogic {
       const base = who + " - " + fmt;
       const zip = await window.SS_ZIP.make(files);
       window.SS_ZIP.save(zip, mode === "stampa" ? base + ".zip" : base + " (originali).zip");
-      if (mode === "stampa") this.say("Paket za štampu: " + files.length + " listova, format " + order.photo_format + ".");
+      this.say(mode === "stampa"
+        ? "Paket za štampu: " + files.length + " listova, format " + order.photo_format + "."
+        : "Originali: " + files.length + " fotografija.");
     } catch (e) {
       console.error("zip:", e);
       this.say("Preuzimanje nije uspelo.");

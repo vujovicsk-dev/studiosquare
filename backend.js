@@ -132,20 +132,51 @@
     throw last;
   }
 
-  /* Runs tasks with a fixed number in flight; the first hard failure stops
-     new tasks from starting, and the error is passed on — never swallowed. */
+  /* Runs tasks with a fixed number in flight. A photo that still fails after
+     its own retries does NOT stop the others: every photo gets its turn, and
+     the ones that failed are returned for another round. Only a permanent
+     error (permission, missing file) stops the batch at once. */
   async function pool(count, limit, task) {
-    var next = 0, failed = null;
+    var next = 0, fatal = null, failed = [];
     async function worker() {
-      while (next < count && !failed) {
+      while (next < count && !fatal) {
         var i = next++;
-        try { await task(i); } catch (e) { if (!failed) failed = e; }
+        try { await task(i); }
+        catch (e) { if (e && e.fatal) { if (!fatal) fatal = e; } else failed.push({ i: i, err: e }); }
       }
     }
     var running = [];
     for (var w = 0; w < Math.min(limit, count); w++) running.push(worker());
     await Promise.all(running);
-    if (failed) throw failed;
+    if (fatal) throw fatal;
+    return failed;
+  }
+
+  /* Re-encodes a photo that is over the Storage size limit: same aspect,
+     long side at most 6000 px, JPEG 0.9 — still print quality. Used only
+     when Storage refuses the original, never as a default. */
+  async function shrink(file) {
+    var src = null;
+    try { if (window.createImageBitmap) src = await createImageBitmap(file); } catch (e) {}
+    if (!src) {
+      src = await new Promise(function (ok, no) {
+        var img = new Image(); var u = URL.createObjectURL(file);
+        img.onload = function () { URL.revokeObjectURL(u); ok(img); };
+        img.onerror = function () { URL.revokeObjectURL(u); no(new Error('decode')); };
+        img.src = u;
+      });
+    }
+    var w = src.width || src.naturalWidth, h = src.height || src.naturalHeight;
+    var k = Math.min(1, 6000 / Math.max(w, h));
+    var c = document.createElement('canvas');
+    c.width = Math.round(w * k); c.height = Math.round(h * k);
+    var ctx = c.getContext('2d');
+    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+    ctx.drawImage(src, 0, 0, c.width, c.height);
+    if (src.close) src.close();
+    var blob = await new Promise(function (ok) { c.toBlob(ok, 'image/jpeg', 0.9); });
+    if (!blob || !blob.size) throw new Error('shrink');
+    return blob;
   }
 
   async function submitOrder(order, photos, onProgress) {
@@ -181,19 +212,39 @@
     var done = photos.length - todo.length;
     if (onProgress) onProgress(done, photos.length);
 
-    try {
-      await pool(todo.length, CONCURRENCY, async function (n) {
-        var i = todo[n];
-        if (!photos[i] || !photos[i].file || !photos[i].file.size) {
-          var bad = new Error('fotografija ' + (i + 1) + ' (' + (photos[i] && photos[i].name) + ') nije dostupna za slanje');
-          bad.fatal = true;
-          throw bad;
-        }
+    var sendOne = async function (i) {
+      if (!photos[i] || !photos[i].file || !photos[i].file.size) {
+        var bad = new Error('fotografija ' + (i + 1) + ' (' + (photos[i] && photos[i].name) + ') nije dostupna za slanje');
+        bad.fatal = true;
+        throw bad;
+      }
+      try {
         await uploadOne(items[i].file_path, photos[i].file);
-        st.sent[i] = true;
-        done++;
-        if (onProgress) onProgress(done, photos.length);
-      });
+      } catch (e) {
+        if (!/veća od dozvoljene|too large|413/i.test(String(e && e.message))) throw e;
+        console.warn('SS_BACKEND: fotografija', i + 1, 'je prevelika — smanjujem i šaljem ponovo');
+        var smaller = await shrink(photos[i].file);
+        try { await uploadOne(items[i].file_path, smaller); }
+        catch (e2) { e2.fatal = true; throw e2; }
+      }
+      st.sent[i] = true;
+      done++;
+      if (onProgress) onProgress(done, photos.length);
+    };
+
+    /* Up to four rounds over whatever is still missing, with a pause between
+       rounds so a shaky connection can recover. */
+    try {
+      var left = todo;
+      for (var round = 0; round < 4 && left.length; round++) {
+        if (round) {
+          console.warn('SS_BACKEND: runda', round + 1, '—', left.length, 'fotografija još nije poslato');
+          await wait(3000 * round);
+        }
+        var failed = await pool(left.length, CONCURRENCY, function (n) { return sendOne(left[n]); });
+        left = failed.map(function (f) { return f.i; }).map(function (n) { return left[n]; });
+        if (left.length && round === 3) throw failed[0].err;
+      }
     } catch (e) {
       console.error('SS_BACKEND: upload nije uspeo — porudžbina', id, '| poslato',
         Object.keys(st.sent).length, 'od', photos.length, '|', e && e.message);
