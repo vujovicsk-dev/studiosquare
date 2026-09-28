@@ -168,9 +168,7 @@
       photo_count: Number(r.photo_count) || photos.length,
       copies_total: Number(r.copies_total) || Number(r.quantity) || sum,
       total_price: Number(r.total_price) || 0,
-      /* "upload" rows are shown as new orders; the stored status is left
-         untouched until the shop changes it. */
-      status: (!r.status || r.status === 'upload') ? 'novo' : r.status,
+      status: r.status || 'novo',
       spec: spec,
       folder_url: ''
     };
@@ -181,7 +179,12 @@
   async function fetchOrders() {
     var res = await api('/rest/v1/orders?select=*,order_photos(id,file_path,file_name,copies)' +
       '&order=created_at.desc');
-    return (await res.json()).map(toOrder);
+    /* An order still in "upload" has photos on the way: it is not a new order
+       yet. It appears — in the list, the badge and the sound — only once
+       finalize_order has confirmed every photo and set it to "novo". */
+    return (await res.json())
+      .filter(function (r) { return r.status !== 'upload'; })
+      .map(toOrder);
   }
 
   var preloaded = null;
