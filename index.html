@@ -172,7 +172,7 @@
   <sc-if value="{{ showUpload }}" hint-placeholder-val="{{ false }}">
     <div style="position:fixed;top:0;right:0;bottom:0;left:0;z-index:55;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(8,69,74,.45)">
       <div role="status" aria-live="polite" style="width:100%;max-width:420px;display:flex;flex-direction:column;gap:14px;padding:26px 22px;border-radius:24px;background:#fff;box-shadow:0 18px 50px rgba(8,69,74,.25);text-align:center">
-        <span style="font-family:var(--font-heading);font-size:22px;font-weight:700;color:#15262a">{{ upText }}</span>
+        <span style="font-family:var(--font-heading);font-size:clamp(16px,4.6vw,22px);font-weight:700;color:#15262a;white-space:nowrap">{{ upText }}</span>
         <div style="height:12px;border-radius:999px;background:#e6f7f7;overflow:hidden">
           <div style="height:100%;border-radius:999px;background:#48D1CC;transition:width .3s ease;width:{{ upPct }}"></div>
         </div>
