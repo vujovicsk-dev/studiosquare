@@ -259,7 +259,7 @@
         <span style="font-size:17px;font-weight:600;color:#0a6b6b">{{ t.addPhotos }}</span>
         <span style="font-size:14px;color:#5b787c">{{ t.addPhotosSub }}</span>
       </label>
-      <input id="photo-input" type="file" accept="image/*,.jpg,.jpeg,.png,.heic,.heif,.HEIC,.HEIF" multiple="{{ true }}" onChange="{{ onFiles }}">
+      <input id="photo-input" type="file" accept="{{ photoAccept }}" multiple="{{ true }}" onChange="{{ onFiles }}">
 
       <sc-if value="{{ isConverting }}" hint-placeholder-val="{{ false }}">
         <p style="margin:0;padding:12px 16px;border:1px solid #c9eded;border-radius:16px;background:#f7fdfd;font-size:14px;line-height:1.5;color:#3d5a5e">{{ convertingLabel }}</p>
@@ -527,6 +527,9 @@ class Component extends DCLogic {
 
   async decode(file) {
     if (window.createImageBitmap) {
+      /* Ask explicitly for the camera's orientation. Older Chrome ignored the
+         EXIF rotation by default, which turned portrait photos sideways. */
+      try { return await createImageBitmap(file, { imageOrientation: "from-image" }); } catch (err) { /* older API */ }
       try { return await createImageBitmap(file); } catch (err) { /* fall through */ }
     }
     const url = URL.createObjectURL(file);
@@ -643,6 +646,11 @@ class Component extends DCLogic {
         try { new Notification("Studio Square", opts); } catch (e) {}
       }
     }
+  }
+
+  isIOS() {
+    const ua = navigator.userAgent || "";
+    return /iPad|iPhone|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
   }
 
   isHeic(file) {
@@ -917,6 +925,10 @@ class Component extends DCLogic {
         : "",
       hasUploadError: !!s.uploadError,
       onFiles: this.addFiles,
+      /* On iPhone/iPad, not naming HEIC lets iOS hand over a full-resolution
+         JPEG it converts itself — no browser canvas, so no 16.7 MP ceiling.
+         Everywhere else HEIC stays accepted and converts as before. */
+      photoAccept: this.isIOS() ? "image/*" : "image/*,.jpg,.jpeg,.png,.heic,.heif,.HEIC,.HEIF",
       hasPhotos: s.photos.length > 0,
       photos: s.photos.map(p => {
         const q = cal ? this.quality(p, fmt, t) : null;
