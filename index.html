@@ -110,6 +110,7 @@
   input[type=file]{display:none}
   @keyframes ticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
   @media (max-width:520px){
+    #cal-note-b{display:block}
     .opt-btn{padding:11px 14px !important;font-size:14px !important;border-radius:14px !important}
     .opt-btn span:first-child{font-size:16px !important}
     .opt-btn span:last-child{font-size:11px !important}
@@ -212,13 +213,46 @@
     </div>
   </sc-if>
 
-  <sc-if value="{{ editing }}" hint-placeholder-val="{{ true }}">
+  <sc-if value="{{ atHome }}" hint-placeholder-val="{{ true }}">
+    <main style="max-width:720px;margin:0 auto;padding:8px 20px 8px;display:flex;flex-direction:column;gap:20px">
+      <h2 style="font-family:var(--font-heading);font-size:24px;margin:0;color:#15262a;text-align:center">{{ t.homeTitle }}</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:16px">
+        <button type="button" onClick="{{ pickFoto }}" style="display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:20px;min-height:220px;padding:16px 16px 24px;border:2px solid #c9eded;border-radius:28px;background:#f7fdfd;text-align:left;cursor:pointer;font-family:var(--font-body);color:#15262a;transition:border-color .2s,background .2s,transform .2s" style-hover="border-color:#48D1CC;background:#e6f7f7;transform:translateY(-2px)" style-active="background:#48D1CC">
+          <span style="display:block;width:100%;aspect-ratio:4 / 3;border-radius:20px;overflow:hidden;background:#e6f7f7">
+            <img src="./card-foto.jpg" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;object-position:50% 50%;display:block">
+          </span>
+          <span style="display:flex;flex-direction:column;gap:10px">
+            <span style="font-family:var(--font-heading);font-size:clamp(28px,7vw,36px);font-weight:700;color:#0a6b6b;line-height:1.1">{{ t.cardFoto }}</span>
+            <span style="font-size:15px;line-height:1.55;color:#3d5a5e;max-width:300px;text-wrap:pretty">{{ t.cardFotoSub }}</span>
+          </span>
+          <span style="width:46px;height:46px;border-radius:999px;background:#48D1CC;color:#08454a;display:grid;place-items:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="m13 6 6 6-6 6"></path></svg></span>
+        </button>
+        <button type="button" onClick="{{ pickCal }}" style="display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:20px;min-height:220px;padding:16px 16px 24px;border:2px solid #c9eded;border-radius:28px;background:#f7fdfd;text-align:left;cursor:pointer;font-family:var(--font-body);color:#15262a;transition:border-color .2s,background .2s,transform .2s" style-hover="border-color:#48D1CC;background:#e6f7f7;transform:translateY(-2px)" style-active="background:#48D1CC">
+          <span style="display:block;width:100%;aspect-ratio:4 / 3;border-radius:20px;overflow:hidden;background:#e6f7f7">
+            <img src="./card-kalendar.jpg" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;object-position:50% 32%;display:block">
+          </span>
+          <span style="display:flex;flex-direction:column;gap:10px">
+            <span style="font-family:var(--font-heading);font-size:clamp(28px,7vw,36px);font-weight:700;color:#0a6b6b;line-height:1.1">{{ t.cardCal }}</span>
+            <span style="font-size:15px;line-height:1.55;color:#3d5a5e;max-width:300px;text-wrap:pretty">{{ t.cardCalSub }}</span>
+          </span>
+          <span style="width:46px;height:46px;border-radius:999px;background:#48D1CC;color:#08454a;display:grid;place-items:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="m13 6 6 6-6 6"></path></svg></span>
+        </button>
+      </div>
+    </main>
+  </sc-if>
+
+  <sc-if value="{{ editing }}" hint-placeholder-val="{{ false }}">
   <main style="max-width:720px;margin:0 auto;padding:0 20px 8px;display:flex;flex-direction:column;gap:36px">
+
+    <button type="button" onClick="{{ goHome }}" style="align-self:flex-start;display:flex;align-items:center;gap:6px;margin-bottom:-18px;padding:8px 14px 8px 10px;border:1px solid #d6e8e8;border-radius:999px;background:#fff;color:#3d5a5e;font-family:var(--font-body);font-size:14px;font-weight:600;cursor:pointer" style-hover="border-color:#48D1CC;background:#f0fbfb" style-active="background:#48D1CC">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"></path><path d="m11 18-6-6 6-6"></path></svg>
+      {{ t.back }}
+    </button>
 
     <section style="display:flex;flex-direction:column;gap:14px">
       <div style="display:flex;align-items:baseline;gap:10px">
         <span style="width:26px;height:26px;border-radius:999px;background:#e6f7f7;color:#0a6b6b;display:grid;place-items:center;font-size:14px;font-weight:700;flex:none">1</span>
-        <h2 style="font-family:var(--font-heading);font-size:24px;margin:0;color:#15262a">{{ t.step1 }}</h2>
+        <h2 style="font-family:var(--font-heading);font-size:24px;margin:0;color:#15262a">{{ step1Label }}</h2>
       </div>
 
       <label for="photo-input" style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:36px 20px;border:2px dashed #9fdede;border-radius:24px;background:#f7fdfd;cursor:pointer;text-align:center" style-hover="background:#e6f7f7;border-color:#0e9c9c">
@@ -259,7 +293,7 @@
     <section style="display:flex;flex-direction:column;gap:14px">
       <div style="display:flex;align-items:baseline;gap:10px">
         <span style="width:26px;height:26px;border-radius:999px;background:#e6f7f7;color:#0a6b6b;display:grid;place-items:center;font-size:14px;font-weight:700;flex:none">2</span>
-        <h2 style="font-family:var(--font-heading);font-size:24px;margin:0;color:#15262a">{{ t.step2 }}</h2>
+        <h2 style="font-family:var(--font-heading);font-size:24px;margin:0;color:#15262a">{{ step2Label }}</h2>
       </div>
 
       <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px" id="format-grid">
@@ -271,6 +305,10 @@
         </sc-for>
       </div>
 
+      <sc-if value="{{ isCal }}" hint-placeholder-val="{{ false }}">
+        <p style="margin:0;font-size:13px;line-height:1.5;color:#6b8589">{{ calNoteA }} <span id="cal-note-b">{{ calNoteB }}</span></p>
+      </sc-if>
+      <sc-if value="{{ notCal }}" hint-placeholder-val="{{ true }}">
       <div style="display:flex">
         <div id="promo-box" style="width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:30px 22px;border:2px solid #35bdb8;border-radius:28px;background:#48D1CC;text-align:center;animation:promoPulse 1.6s ease-in-out infinite">
           <span style="font-size:15px;line-height:1.5;font-weight:700;color:#15262a;max-width:340px">{{ promoTitleA }}<br>{{ promoTitleB }}</span>
@@ -281,6 +319,7 @@
           </div>
         </div>
       </div>
+      </sc-if>
     </section>
 
     <section style="display:flex;flex-direction:column;gap:14px">
@@ -394,6 +433,12 @@ const FORMATS = [
   { id: "20x30", label: "20 × 30", price: 250 },
   { id: "30x40", label: "30 × 40", price: 500 }
 ];
+/* wall calendars: one sheet, one photo per calendar, flat price */
+const CAL_FORMATS = [
+  { id: "k20x30", label: "20 × 30", price: 450 },
+  { id: "k30x20", label: "30 × 20", price: 550 },
+  { id: "k30x40", label: "30 × 40", price: 600 }
+];
 const DELIVERY = [{ id: "radnja", fee: 0 }, { id: "dostava", fee: 0 }];
 
 const STR = {
@@ -409,7 +454,7 @@ const STR = {
     fName: "Ime i prezime", phName: "Marija Petrović", fPhone: "Telefon",
     fAddress: "Adresa za dostavu", phAddress: "Ulica i broj, grad, poštanski broj",
     fNote: "Napomena", phNote: "",
-    srcDevice: "Računar ili telefon", close: "Zatvori", pickSource: "Odakle dodajete fotografije?", leadTime: "Rok izrade je 1 dan", upProgress: "Šaljemo fotografije:", upWarn: "Ne zatvarajte aplikaciju i ne napuštajte stranicu dok se slanje ne završi.", sending: "Slanje u toku…", uploadingTitle: "Šaljemo fotografije", uploadingHint: "Ne zatvarajte stranicu dok se slanje ne završi.", uploadFailTitle: "Slanje nije uspelo", uploadFailBody: "Fotografije nisu sačuvane. Pokušajte ponovo ili nas pozovite — porudžbinu primamo i telefonom.", retry: "Pokušaj ponovo", callUs: "Pozovite nas", promoTitle: "Za porudžbine od 100 ili više fotografija|važe snižene cene:", bulkBadge: "Akcijska cena za 100+ fotografija je primenjena", ticker: "AKCIJA • Poruči 100+ fotografija i ostvari popust •",
+    srcDevice: "Računar ili telefon", close: "Zatvori", pickSource: "Odakle dodajete fotografije?", leadTime: "Rok izrade je 1 dan", homeTitle: "Izaberite svoj proizvod", cardFoto: "Fotografije", cardFotoSub: "Sačuvaj svoje omiljene uspomene", cardCal: "Kalendari", cardCalSub: "Tvoje uspomene tokom cele godine", back: "Nazad", step1Cal: "Izaberite fotografije za kalendar", step2Cal: "Izaberite format kalendara", calNote: "Jedna fotografija je jedan kalendar. Broj komada birate uz svaku fotografiju.", upProgress: "Šaljemo fotografije:", upWarn: "Ne zatvarajte aplikaciju i ne napuštajte stranicu dok se slanje ne završi.", sending: "Slanje u toku…", uploadingTitle: "Šaljemo fotografije", uploadingHint: "Ne zatvarajte stranicu dok se slanje ne završi.", uploadFailTitle: "Slanje nije uspelo", uploadFailBody: "Fotografije nisu sačuvane. Pokušajte ponovo ili nas pozovite — porudžbinu primamo i telefonom.", retry: "Pokušaj ponovo", callUs: "Pozovite nas", promoTitle: "Za porudžbine od 100 ili više fotografija|važe snižene cene:", bulkBadge: "Akcijska cena za 100+ fotografija je primenjena", ticker: "AKCIJA • Poruči 100+ fotografija i ostvari popust •",
     socialHelp: "Otvorite naš profil, sačuvajte željene fotografije na svoj telefon ili računar, a zatim ih dodajte preko opcije „Računar ili telefon“.",
     socialOpenIg: "Otvori Instagram", socialOpenFb: "Otvori Facebook",
     pickupNote: "Za Novi Sad i okolinu do 40 km — porudžbinu možete preuzeti lično.",
@@ -431,7 +476,7 @@ const STR = {
     fName: "Full name", phName: "Maria Petrovic", fPhone: "Phone",
     fAddress: "Delivery address", phAddress: "Street and number, city, postal code",
     fNote: "Note", phNote: "",
-    srcDevice: "Computer or phone", close: "Close", pickSource: "Where are the photos from?", leadTime: "Ready in 1 day", upProgress: "Uploading photos:", upWarn: "Please do not close the app or leave this page until the upload finishes.", sending: "Sending…", uploadingTitle: "Uploading photos", uploadingHint: "Please keep this page open until the upload finishes.", uploadFailTitle: "Upload failed", uploadFailBody: "Your photos were not saved. Please try again or call us — we take orders by phone too.", retry: "Try again", callUs: "Call us", promoTitle: "Orders of 100 photos or more|get reduced prices:", bulkBadge: "Bulk price for 100+ photos applied", ticker: "SALE • Order 100+ photos and get a discount •",
+    srcDevice: "Computer or phone", close: "Close", pickSource: "Where are the photos from?", leadTime: "Ready in 1 day", homeTitle: "What would you like to order?", cardFoto: "Photos", cardFotoSub: "Photo prints in six formats, from 9 × 13 to 30 × 40 cm.", cardCal: "Calendars", cardCalSub: "A wall calendar with your photo, in three formats.", back: "Back", step1Cal: "Choose photos for your calendar", step2Cal: "Choose a calendar format", calNote: "One photo makes one calendar. Choose the number of copies next to each photo.", upProgress: "Uploading photos:", upWarn: "Please do not close the app or leave this page until the upload finishes.", sending: "Sending…", uploadingTitle: "Uploading photos", uploadingHint: "Please keep this page open until the upload finishes.", uploadFailTitle: "Upload failed", uploadFailBody: "Your photos were not saved. Please try again or call us — we take orders by phone too.", retry: "Try again", callUs: "Call us", promoTitle: "Orders of 100 photos or more|get reduced prices:", bulkBadge: "Bulk price for 100+ photos applied", ticker: "SALE • Order 100+ photos and get a discount •",
     socialHelp: "Open our profile, save the photos you want to your phone or computer, then add them with the “Computer or phone” option.",
     socialOpenIg: "Open Instagram", socialOpenFb: "Open Facebook",
     pickupNote: "For Novi Sad and up to 40 km around — you can collect your order in person.",
@@ -445,7 +490,7 @@ const STR = {
 
 class Component extends DCLogic {
   state = {
-    photos: [], format: "10x15", delivery: "radnja",
+    photos: [], format: "10x15", delivery: "radnja", product: null,
     name: "", phone: "", address: "", note: "", sent: null, lang: "sr", uploadError: "", uploading: null, upErr: "", converting: null
   };
 
@@ -781,7 +826,10 @@ class Component extends DCLogic {
   renderVals() {
     const s = this.state;
     const t = STR[s.lang] || STR.sr;
-    const fmt = FORMATS.find(f => f.id === s.format) || FORMATS[0];
+    const cal = s.product === "kalendar";
+    const LIST = cal ? CAL_FORMATS : FORMATS;
+    const fmt = LIST.find(f => f.id === s.format) || LIST[0];
+    const fmtName = (cal ? "Kalendar " : "") + fmt.label + " cm";
     const del = DELIVERY.find(d => d.id === s.delivery) || DELIVERY[0];
     const copies = s.photos.reduce((a, p) => a + p.qty, 0);
     const bulk = copies >= BULK_FROM && fmt.bulk;
@@ -797,9 +845,19 @@ class Component extends DCLogic {
       langLabel: s.lang === "sr" ? "EN" : "SR",
       toggleLang: () => this.setState({ lang: s.lang === "sr" ? "en" : "sr" }),
 
-      editing: !s.sent,
+      editing: !s.sent && !!s.product,
+      atHome: !s.sent && !s.product,
+      isCal: cal,
+      calNoteA: t.calNote.split(". ")[0] + ".",
+      calNoteB: t.calNote.split(". ").slice(1).join(". "),
+      notCal: !cal,
+      step1Label: cal ? t.step1Cal : t.step1,
+      step2Label: cal ? t.step2Cal : t.step2,
+      pickFoto: () => this.setState({ product: "foto", format: "10x15" }),
+      pickCal: () => this.setState({ product: "kalendar", format: CAL_FORMATS[0].id }),
+      goHome: () => this.setState({ product: null }),
       sent: !!s.sent,
-      reset: () => this.setState({ photos: [], name: "", phone: "", address: "", note: "", sent: null }),
+      reset: () => this.setState({ photos: [], name: "", phone: "", address: "", note: "", sent: null, product: null }),
 
       cartCount: copies,
       readyNote: s.readyNote || "",
@@ -833,10 +891,10 @@ class Component extends DCLogic {
         remove: () => this.setState(st => ({ photos: st.photos.filter(x => x.key !== p.key) }))
       })),
 
-      formatOptions: FORMATS.map(f => ({
+      formatOptions: LIST.map(f => ({
         label: f.label,
         priceLabel: this.dinars(copies >= BULK_FROM && f.bulk ? f.bulk : f.price) + " " + t.each,
-        style: this.pill(f.id === s.format),
+        style: this.pill(f.id === fmt.id),
         select: () => this.setState({ format: f.id })
       })),
       deliveryOptions: [
@@ -882,7 +940,7 @@ class Component extends DCLogic {
           "Telefon: " + s.phone.trim(),
           "Preuzimanje: " + delLabel,
           needsAddress ? "Adresa: " + s.address.trim() : null,
-          "Format: " + fmt.label + " cm",
+          "Format: " + fmtName,
           "Cena po komadu: " + this.dinars(unit) + (bulk ? " (akcijska cena od " + BULK_FROM + " kom)" : ""), "",
           "Fotografije:",
           ...s.photos.map(p => "· " + p.name + " — " + p.qty + " kom"),
@@ -902,7 +960,7 @@ class Component extends DCLogic {
             Telefon: s.phone.trim(),
             Preuzimanje: delLabel,
             Adresa: needsAddress ? s.address.trim() : "—",
-            Format: fmt.label + " cm",
+            Format: fmtName,
             CenaPoKomadu: this.dinars(unit) + (bulk ? " (akcija 100+)" : ""),
             Fotografije: s.photos.map(p => p.name + " — " + p.qty + " kom").join("\n"),
             Ukupno: this.dinars(total),
@@ -920,7 +978,7 @@ class Component extends DCLogic {
           phone: s.phone.trim(),
           address: needsAddress ? s.address.trim() : "",
           note: s.note.trim(),
-          photo_format: fmt.label + " cm",
+          photo_format: fmtName,
           photo_quantity: copies,
           total_price: total,
           photo_count: s.photos.length
