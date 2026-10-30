@@ -1,7 +1,7 @@
 try { importScripts('./supabase.js'); } catch (e) {}
 const SB = self.SS_SUPABASE || {};
 
-const CACHE = 'studio-square-v127';
+const CACHE = 'studio-square-v131';
 const CORE = [
   './',
   './index.html',

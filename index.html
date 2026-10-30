@@ -229,7 +229,7 @@
         </button>
         <button type="button" onClick="{{ pickCal }}" style="display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:20px;min-height:220px;padding:16px 16px 24px;border:2px solid #c9eded;border-radius:28px;background:#f7fdfd;text-align:left;cursor:pointer;font-family:var(--font-body);color:#15262a;transition:border-color .2s,background .2s,transform .2s" style-hover="border-color:#48D1CC;background:#e6f7f7;transform:translateY(-2px)" style-active="background:#48D1CC">
           <span style="display:block;width:100%;aspect-ratio:4 / 3;border-radius:20px;overflow:hidden;background:#e6f7f7">
-            <img src="./card-kalendar.jpg" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;object-position:50% 32%;display:block">
+            <img src="./card-kalendar.jpg?v2" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;object-position:50% 40%;display:block">
           </span>
           <span style="display:flex;flex-direction:column;gap:10px">
             <span style="font-family:var(--font-heading);font-size:clamp(28px,7vw,36px);font-weight:700;color:#0a6b6b;line-height:1.1">{{ t.cardCal }}</span>
@@ -252,7 +252,7 @@
     <section style="display:flex;flex-direction:column;gap:14px">
       <div style="display:flex;align-items:baseline;gap:10px">
         <span style="width:26px;height:26px;border-radius:999px;background:#e6f7f7;color:#0a6b6b;display:grid;place-items:center;font-size:14px;font-weight:700;flex:none">1</span>
-        <h2 style="font-family:var(--font-heading);font-size:24px;margin:0;color:#15262a">{{ step1Label }}</h2>
+        <h2 id="step-1" style="font-family:var(--font-heading);font-size:24px;margin:0;color:#15262a">{{ step1Label }}</h2>
       </div>
 
       <label for="photo-input" style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:36px 20px;border:2px dashed #9fdede;border-radius:24px;background:#f7fdfd;cursor:pointer;text-align:center" style-hover="background:#e6f7f7;border-color:#0e9c9c">
@@ -313,6 +313,7 @@
 
       <sc-if value="{{ isCal }}" hint-placeholder-val="{{ false }}">
         <p style="margin:0;font-size:13px;line-height:1.5;color:#6b8589">{{ calNoteA }} <span id="cal-note-b">{{ calNoteB }}</span></p>
+        <p style="margin:-6px 0 0;font-size:13px;line-height:1.5;color:#6b8589;font-style:italic">{{ t.calCrop }}</p>
       </sc-if>
       <sc-if value="{{ notCal }}" hint-placeholder-val="{{ true }}">
       <div style="display:flex">
@@ -461,7 +462,7 @@ const STR = {
     fName: "Ime i prezime", phName: "Marija Petrović", fPhone: "Telefon",
     fAddress: "Adresa za dostavu", phAddress: "Ulica i broj, grad, poštanski broj",
     fNote: "Napomena", phNote: "",
-    srcDevice: "Računar ili telefon", close: "Zatvori", pickSource: "Odakle dodajete fotografije?", leadTime: "Rok izrade je 1 dan", qOk: "Dobra rezolucija za {f} cm", qLow: "Niža rezolucija za {f} cm — štampa može biti manje oštra", homeTitle: "Izaberite svoj proizvod", cardFoto: "Fotografije", cardFotoSub: "Sačuvaj svoje omiljene uspomene", cardCal: "Kalendari", cardCalSub: "Tvoje uspomene tokom cele godine", back: "Nazad", step1Cal: "Izaberite fotografije za kalendar", step2Cal: "Izaberite format kalendara", calNote: "Jedna fotografija je jedan kalendar. Broj komada birate uz svaku fotografiju.", upProgress: "Šaljemo fotografije:", upWarn: "Ne zatvarajte aplikaciju i ne napuštajte stranicu dok se slanje ne završi.", sending: "Slanje u toku…", uploadingTitle: "Šaljemo fotografije", uploadingHint: "Ne zatvarajte stranicu dok se slanje ne završi.", uploadFailTitle: "Slanje nije uspelo", uploadFailBody: "Fotografije nisu sačuvane. Pokušajte ponovo ili nas pozovite — porudžbinu primamo i telefonom.", retry: "Pokušaj ponovo", callUs: "Pozovite nas", promoTitle: "Za porudžbine od 100 ili više fotografija|važe snižene cene:", bulkBadge: "Akcijska cena za 100+ fotografija je primenjena", ticker: "AKCIJA • Poruči 100+ fotografija i ostvari popust •",
+    srcDevice: "Računar ili telefon", close: "Zatvori", pickSource: "Odakle dodajete fotografije?", leadTime: "Rok izrade je 1 dan", calCrop: "Ukoliko fotografija nije istog oblika kao odabrani kalendar, deo fotografije može biti isečen.", qOk: "Dobra rezolucija za {f} cm", qLow: "Niža rezolucija za {f} cm — štampa može biti manje oštra", homeTitle: "Izaberite svoj proizvod", cardFoto: "Fotografije", cardFotoSub: "Sačuvaj svoje omiljene uspomene", cardCal: "Kalendari", cardCalSub: "Tvoje uspomene tokom cele godine", back: "Nazad", step1Cal: "Izaberite fotografije za kalendar", step2Cal: "Izaberite format kalendara", calNote: "Jedna fotografija je jedan kalendar. Broj komada birate uz svaku fotografiju.", upProgress: "Šaljemo fotografije:", upWarn: "Ne zatvarajte aplikaciju i ne napuštajte stranicu dok se slanje ne završi.", sending: "Slanje u toku…", uploadingTitle: "Šaljemo fotografije", uploadingHint: "Ne zatvarajte stranicu dok se slanje ne završi.", uploadFailTitle: "Slanje nije uspelo", uploadFailBody: "Fotografije nisu sačuvane. Pokušajte ponovo ili nas pozovite — porudžbinu primamo i telefonom.", retry: "Pokušaj ponovo", callUs: "Pozovite nas", promoTitle: "Za porudžbine od 100 ili više fotografija|važe snižene cene:", bulkBadge: "Akcijska cena za 100+ fotografija je primenjena", ticker: "AKCIJA • Poruči 100+ fotografija i ostvari popust •",
     socialHelp: "Otvorite naš profil, sačuvajte željene fotografije na svoj telefon ili računar, a zatim ih dodajte preko opcije „Računar ili telefon“.",
     socialOpenIg: "Otvori Instagram", socialOpenFb: "Otvori Facebook",
     pickupNote: "Za Novi Sad i okolinu do 40 km — porudžbinu možete preuzeti lično.",
@@ -483,7 +484,7 @@ const STR = {
     fName: "Full name", phName: "Maria Petrovic", fPhone: "Phone",
     fAddress: "Delivery address", phAddress: "Street and number, city, postal code",
     fNote: "Note", phNote: "",
-    srcDevice: "Computer or phone", close: "Close", pickSource: "Where are the photos from?", leadTime: "Ready in 1 day", qOk: "Good resolution for {f} cm", qLow: "Lower resolution for {f} cm — the print may be less sharp", homeTitle: "What would you like to order?", cardFoto: "Photos", cardFotoSub: "Photo prints in six formats, from 9 × 13 to 30 × 40 cm.", cardCal: "Calendars", cardCalSub: "A wall calendar with your photo, in three formats.", back: "Back", step1Cal: "Choose photos for your calendar", step2Cal: "Choose a calendar format", calNote: "One photo makes one calendar. Choose the number of copies next to each photo.", upProgress: "Uploading photos:", upWarn: "Please do not close the app or leave this page until the upload finishes.", sending: "Sending…", uploadingTitle: "Uploading photos", uploadingHint: "Please keep this page open until the upload finishes.", uploadFailTitle: "Upload failed", uploadFailBody: "Your photos were not saved. Please try again or call us — we take orders by phone too.", retry: "Try again", callUs: "Call us", promoTitle: "Orders of 100 photos or more|get reduced prices:", bulkBadge: "Bulk price for 100+ photos applied", ticker: "SALE • Order 100+ photos and get a discount •",
+    srcDevice: "Computer or phone", close: "Close", pickSource: "Where are the photos from?", leadTime: "Ready in 1 day", calCrop: "If the photo is not the same shape as the chosen calendar, part of it may be cropped.", qOk: "Good resolution for {f} cm", qLow: "Lower resolution for {f} cm — the print may be less sharp", homeTitle: "What would you like to order?", cardFoto: "Photos", cardFotoSub: "Photo prints in six formats, from 9 × 13 to 30 × 40 cm.", cardCal: "Calendars", cardCalSub: "A wall calendar with your photo, in three formats.", back: "Back", step1Cal: "Choose photos for your calendar", step2Cal: "Choose a calendar format", calNote: "One photo makes one calendar. Choose the number of copies next to each photo.", upProgress: "Uploading photos:", upWarn: "Please do not close the app or leave this page until the upload finishes.", sending: "Sending…", uploadingTitle: "Uploading photos", uploadingHint: "Please keep this page open until the upload finishes.", uploadFailTitle: "Upload failed", uploadFailBody: "Your photos were not saved. Please try again or call us — we take orders by phone too.", retry: "Try again", callUs: "Call us", promoTitle: "Orders of 100 photos or more|get reduced prices:", bulkBadge: "Bulk price for 100+ photos applied", ticker: "SALE • Order 100+ photos and get a discount •",
     socialHelp: "Open our profile, save the photos you want to your phone or computer, then add them with the “Computer or phone” option.",
     socialOpenIg: "Open Instagram", socialOpenFb: "Open Facebook",
     pickupNote: "For Novi Sad and up to 40 km around — you can collect your order in person.",
@@ -646,6 +647,15 @@ class Component extends DCLogic {
         try { new Notification("Studio Square", opts); } catch (e) {}
       }
     }
+  }
+
+  toStep1() {
+    requestAnimationFrame(() => {
+      const el = document.getElementById("step-1");
+      if (!el) return;
+      const y = el.getBoundingClientRect().top + window.pageYOffset - 24;
+      window.scrollTo({ top: y, behavior: "smooth" });
+    });
   }
 
   isIOS() {
@@ -897,7 +907,7 @@ class Component extends DCLogic {
       step1Label: cal ? t.step1Cal : t.step1,
       step2Label: cal ? t.step2Cal : t.step2,
       pickFoto: () => this.setState({ product: "foto", format: "10x15" }),
-      pickCal: () => this.setState({ product: "kalendar", format: CAL_FORMATS[0].id }),
+      pickCal: () => this.setState({ product: "kalendar", format: CAL_FORMATS[0].id }, () => this.toStep1()),
       goHome: () => this.setState({ product: null }),
       sent: !!s.sent,
       reset: () => this.setState({ photos: [], name: "", phone: "", address: "", note: "", sent: null, product: null }),
