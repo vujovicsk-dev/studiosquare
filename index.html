@@ -4,6 +4,17 @@
 <meta charset="utf-8">
 <title>Studio Square — štampa fotografija</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script>
+/* A Supabase password-reset link that lands on the home page (e.g. one sent
+   from the Supabase dashboard, which always uses the Site URL) is passed on
+   to the reset page with its token. Nothing happens for normal visits. */
+(function () {
+  var h = location.hash || '', q = location.search || '';
+  if (/type=recovery/.test(h + q) || (/error_code=/.test(h) && /otp|expired|access_denied/.test(h))) {
+    location.replace('./reset-password.html' + q + h);
+  }
+})();
+</script>
 <style id="ss-no-preloader">.sc-placeholder,.sc-interp.sc-missing{background:none!important;border-color:transparent!important}.sc-placeholder::before,.sc-interp.sc-missing::before{content:none!important;animation:none!important;background:none!important}</style>
 <script>
 /* React loader: tries three CDNs, then boots the runtime. Keeps the app from
@@ -109,6 +120,25 @@
   a:hover{color:#0e9c9c}
   input[type=file]{display:none}
   @keyframes ticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+  @media (min-width:761px){ #site-header{background:#dbe6ef !important} }
+  @media (min-width:761px){ #tagline{max-width:none !important;width:100%;padding:0 20px;box-sizing:border-box} #tagline br{display:none} #tagline #tagline-br2{display:inline} }
+  @media (max-width:520px){ #mug-mode{gap:8px !important} #mug-mode > button{padding:10px 12px !important;font-size:13px !important;min-height:0 !important} }
+  @media (max-width:520px){ #step1-tail{display:block} }
+  @media (max-width:520px){
+    #mug-grid{gap:8px !important}
+    #mug-grid > div > button:first-child{gap:10px !important;padding:6px 14px 6px 6px !important}
+    #mug-grid > div > button:first-child > span:nth-child(1){width:48px !important;height:48px !important;border-radius:11px !important}
+    #mug-grid > div > button:first-child > span:nth-child(2){font-size:14px !important}
+    #mug-grid > div > button:first-child > span:nth-child(3){font-size:13px !important}
+  }
+  @media (max-width:760px){
+    #home-grid{grid-template-columns:minmax(0,1fr) !important;gap:12px !important}
+    #home-grid > button{min-height:0 !important;gap:12px !important;padding:12px 12px 16px !important;border-radius:22px !important}
+    #home-grid > button > span:first-child{aspect-ratio:16 / 9 !important;border-radius:16px !important}
+    #home-grid > button > span:nth-child(2) > span:first-child{font-size:26px !important}
+    #home-grid > button > span:nth-child(2) > span:last-child{font-size:14px !important}
+    #home-grid > button > span:last-child{width:38px !important;height:38px !important}
+  }
   @media (max-width:520px){
     #cal-note-b{display:block}
     .opt-btn{padding:11px 14px !important;font-size:14px !important;border-radius:14px !important}
@@ -153,7 +183,7 @@
 
   </div>
 
-  <header style="display:flex;flex-direction:column;align-items:center;gap:18px;padding:56px 20px 40px;text-align:center;background:#e6f7f7">
+  <header id="site-header" style="display:flex;flex-direction:column;align-items:center;gap:18px;padding:56px 20px 40px;text-align:center;background:#e6f7f7">
     <div id="logo-frame" style="width:min(80%,380px);aspect-ratio:1 / 1">
       <img src="./logo.png" alt="Studio Square" style="width:100%;height:100%;object-fit:contain;display:block;">
     </div>
@@ -165,7 +195,7 @@
       <span aria-hidden="true" style="flex:none;padding-right:44px;font-size:15px;font-weight:700;color:#15262a;white-space:nowrap">{{ t.ticker }}</span>
     </div>
   </div>
-    <p style="margin:6px 0 0;max-width:520px;font-family:'Caveat',cursive;font-size:22px;font-size:clamp(20px,5.6vw,26px);line-height:1.4;color:#3d5a5e;text-align:center;text-wrap:pretty">{{ t.tagline1a }}<br>{{ t.tagline1b }}<br>{{ t.tagline2a }} <span style="white-space:nowrap">{{ t.tagline2b }}</span></p>
+    <p id="tagline" style="margin:6px 0 0;max-width:520px;font-family:'Caveat',cursive;font-size:22px;font-size:clamp(20px,5.6vw,26px);line-height:1.4;color:#3d5a5e;text-align:center;text-wrap:pretty">{{ t.tagline1a }}<br><span> </span>{{ t.tagline1b }}<br id="tagline-br2"><span> </span>{{ t.tagline2a }} <span style="white-space:nowrap">{{ t.tagline2b }}</span></p>
   </header>
 
 
@@ -196,6 +226,16 @@
     </div>
   </sc-if>
 
+  <sc-if value="{{ zoomOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeZoom }}" style="position:fixed;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(8,69,74,.55);cursor:zoom-out">
+      <div onClick="{{ keepZoom }}" style="position:relative;display:flex;flex-direction:column;align-items:center;gap:12px;width:min(100%,460px);padding:16px 16px 20px;border-radius:28px;background:#fff;box-shadow:0 20px 60px rgba(8,69,74,.3)">
+        <img src="{{ zoomUrl }}" alt="{{ zoomName }}" style="display:block;width:100%;aspect-ratio:1 / 1;object-fit:contain;border-radius:20px">
+        <span style="font-size:16px;font-weight:700;color:#15262a;text-align:center">{{ zoomName }}</span>
+        <button type="button" onClick="{{ closeZoom }}" aria-label="Zatvori" style="position:absolute;top:10px;right:10px;width:40px;height:40px;border:0;border-radius:999px;background:#e6f7f7;color:#08454a;font-family:var(--font-body);font-size:18px;font-weight:700;cursor:pointer" style-hover="background:#48D1CC">✕</button>
+      </div>
+    </div>
+  </sc-if>
+
   <sc-if value="{{ hasReadyNote }}" hint-placeholder-val="{{ false }}">
     <div style="position:fixed;left:16px;right:16px;bottom:16px;z-index:60;display:flex;align-items:center;gap:12px;max-width:520px;margin:0 auto;padding:16px 18px;border-radius:22px;background:#48D1CC;box-shadow:0 10px 30px rgba(8,69,74,.22)">
       <span style="flex:1;font-size:15px;line-height:1.5;font-weight:700;color:#08454a">{{ readyNote }}</span>
@@ -214,9 +254,9 @@
   </sc-if>
 
   <sc-if value="{{ atHome }}" hint-placeholder-val="{{ true }}">
-    <main style="max-width:720px;margin:0 auto;padding:8px 20px 8px;display:flex;flex-direction:column;gap:20px">
+    <main style="max-width:1200px;margin:0 auto;padding:8px 20px 8px;display:flex;flex-direction:column;gap:20px">
       <h2 style="font-family:var(--font-heading);font-size:24px;margin:0;color:#15262a;text-align:center">{{ t.homeTitle }}</h2>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:16px">
+      <div id="home-grid" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px">
         <button type="button" onClick="{{ pickFoto }}" style="display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:20px;min-height:220px;padding:16px 16px 24px;border:2px solid #c9eded;border-radius:28px;background:#f7fdfd;text-align:left;cursor:pointer;font-family:var(--font-body);color:#15262a;transition:border-color .2s,background .2s,transform .2s" style-hover="border-color:#48D1CC;background:#e6f7f7;transform:translateY(-2px)" style-active="background:#48D1CC">
           <span style="display:block;width:100%;aspect-ratio:4 / 3;border-radius:20px;overflow:hidden;background:#e6f7f7">
             <img src="./card-foto.jpg" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;object-position:50% 50%;display:block">
@@ -237,6 +277,16 @@
           </span>
           <span style="width:46px;height:46px;border-radius:999px;background:#48D1CC;color:#08454a;display:grid;place-items:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="m13 6 6 6-6 6"></path></svg></span>
         </button>
+        <button type="button" onClick="{{ pickMug }}" style="display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:20px;min-height:220px;padding:16px 16px 24px;border:2px solid #c9eded;border-radius:28px;background:#f7fdfd;text-align:left;cursor:pointer;font-family:var(--font-body);color:#15262a;transition:border-color .2s,background .2s,transform .2s" style-hover="border-color:#48D1CC;background:#e6f7f7;transform:translateY(-2px)" style-active="background:#48D1CC">
+          <span style="display:block;width:100%;aspect-ratio:4 / 3;border-radius:20px;overflow:hidden;background:#e6f7f7">
+            <img src="./card-solje.jpg" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;object-position:50% 62%;display:block">
+          </span>
+          <span style="display:flex;flex-direction:column;gap:10px">
+            <span style="font-family:var(--font-heading);font-size:clamp(28px,7vw,36px);font-weight:700;color:#0a6b6b;line-height:1.1">{{ t.cardMug }}</span>
+            <span style="font-size:15px;line-height:1.55;color:#3d5a5e;max-width:300px;text-wrap:pretty">{{ t.cardMugSub }}</span>
+          </span>
+          <span style="width:46px;height:46px;border-radius:999px;background:#48D1CC;color:#08454a;display:grid;place-items:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="m13 6 6 6-6 6"></path></svg></span>
+        </button>
       </div>
     </main>
   </sc-if>
@@ -252,8 +302,20 @@
     <section style="display:flex;flex-direction:column;gap:14px">
       <div style="display:flex;align-items:baseline;gap:10px">
         <span style="width:26px;height:26px;border-radius:999px;background:#e6f7f7;color:#0a6b6b;display:grid;place-items:center;font-size:14px;font-weight:700;flex:none">1</span>
-        <h2 id="step-1" style="font-family:var(--font-heading);font-size:24px;margin:0;color:#15262a">{{ step1Label }}</h2>
+        <h2 id="step-1" style="font-family:var(--font-heading);font-size:24px;margin:0;color:#15262a">{{ step1Label }}<span id="step1-tail">{{ step1Tail }}</span></h2>
       </div>
+
+      <sc-if value="{{ isMug }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div id="mug-mode" style="display:flex;gap:10px">
+            <sc-for list="{{ mugModeOptions }}" as="mo" hint-placeholder-count="2">
+              <button type="button" onClick="{{ mo.select }}" style="{{ mo.style }}">{{ mo.label }}</button>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ showUploadArea }}" hint-placeholder-val="{{ true }}">
 
       <label for="photo-input" style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:36px 20px;border:2px dashed #9fdede;border-radius:24px;background:#f7fdfd;cursor:pointer;text-align:center" style-hover="background:#e6f7f7;border-color:#0e9c9c">
         <span style="font-size:17px;font-weight:600;color:#0a6b6b">{{ t.addPhotos }}</span>
@@ -272,7 +334,7 @@
       <sc-if value="{{ hasPhotos }}" hint-placeholder-val="{{ true }}">
         <div style="display:flex;flex-direction:column;gap:10px">
           <sc-for list="{{ photos }}" as="p">
-            <div style="display:flex;flex-wrap:wrap;align-items:center;gap:12px 14px;padding:12px;border:1px solid #e2efef;border-radius:18px;background:#fff">
+            <div style="position:relative;display:flex;flex-wrap:wrap;align-items:center;gap:12px 14px;padding:12px 48px 12px 12px;border:1px solid #e2efef;border-radius:18px;background:#fff">
               <div role="img" aria-label="{{ p.name }}" style="{{ p.thumbStyle }}"></div>
               <div style="flex:1 1 140px;min-width:120px">
                 <div style="font-size:15px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ p.name }}</div>
@@ -284,15 +346,30 @@
                   <div style="margin-top:3px;font-size:12px;line-height:1.4;color:#9a5a12">! {{ p.qText }}</div>
                 </sc-if>
               </div>
+              <sc-if value="{{ p.showQty }}" hint-placeholder-val="{{ true }}">
               <div style="display:flex;align-items:center;gap:8px;flex:none;margin-left:auto">
                 <button type="button" aria-label="{{ t.less }}" onClick="{{ p.dec }}" style="width:44px;height:44px;border-radius:999px;border:1px solid #c9eded;background:#fff;color:#0a6b6b;font-size:20px;cursor:pointer;line-height:1" style-hover="background:#e6f7f7">−</button>
                 <span style="min-width:26px;text-align:center;font-size:16px;font-weight:700">{{ p.qty }}</span>
                 <button type="button" aria-label="{{ t.more }}" onClick="{{ p.inc }}" style="width:44px;height:44px;border-radius:999px;border:1px solid #c9eded;background:#fff;color:#0a6b6b;font-size:20px;cursor:pointer;line-height:1" style-hover="background:#e6f7f7">+</button>
               </div>
-              <button type="button" aria-label="{{ t.remove }}" onClick="{{ p.remove }}" style="width:44px;height:44px;border-radius:999px;border:0;background:transparent;color:#93a7aa;font-size:20px;cursor:pointer;flex:none" style-hover="color:#0a6b6b;background:#f0f7f7">×</button>
+              </sc-if>
+              <button type="button" aria-label="{{ t.remove }}" onClick="{{ p.remove }}" style="position:absolute;top:4px;right:4px;width:44px;height:44px;border-radius:999px;border:0;background:transparent;color:#93a7aa;font-size:20px;cursor:pointer;flex:none" style-hover="color:#0a6b6b;background:#f0f7f7">×</button>
             </div>
           </sc-for>
         </div>
+      </sc-if>
+
+      </sc-if>
+
+      <sc-if value="{{ mugModeChosen }}" hint-placeholder-val="{{ false }}">
+        <label style="display:flex;flex-direction:column;gap:6px">
+          <span style="font-size:14px;font-weight:600;color:#3d5a5e">{{ mugTextLabel }}</span>
+          <input type="text" value="{{ mugText }}" onChange="{{ onMugText }}" maxlength="80" placeholder="{{ t.mugTextPh }}" style="padding:14px 16px;border:1px solid #c9eded;border-radius:16px;background:#fff;font-family:var(--font-body);font-size:16px;color:#15262a;outline:none" style-focus="border-color:#48D1CC;box-shadow:0 0 0 3px rgba(72,209,204,.25)">
+        </label>
+
+        <sc-if value="{{ mugPhotoMode }}" hint-placeholder-val="{{ true }}">
+        <p style="margin:-6px 0 0;font-size:13px;line-height:1.5;color:#6b8589">{{ t.mugNote }}</p>
+        </sc-if>
       </sc-if>
     </section>
 
@@ -302,6 +379,35 @@
         <h2 style="font-family:var(--font-heading);font-size:24px;margin:0;color:#15262a">{{ step2Label }}</h2>
       </div>
 
+      <sc-if value="{{ isMug }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-direction:column;gap:10px" id="mug-grid">
+          <sc-for list="{{ mugOptions }}" as="m" hint-placeholder-count="6">
+            <div style="display:flex;flex-direction:column;gap:8px">
+            <button type="button" onClick="{{ m.select }}" style="{{ m.style }}">
+              <span onClick="{{ m.zoom }}" style="{{ m.imgStyle }}"></span>
+              <span style="flex:1;min-width:0;font-size:16px;font-weight:700;line-height:1.3;text-wrap:pretty">{{ m.name }}</span>
+              <span style="flex:none;font-size:15px;font-weight:600;opacity:.8;white-space:nowrap">{{ m.priceLabel }}</span>
+            </button>
+            <sc-if value="{{ m.showVariants }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;gap:8px;padding:12px;border:1px solid #c9eded;border-radius:20px;background:#f7fdfd">
+                <span style="font-size:13px;font-weight:600;color:#3d5a5e">{{ t.pickVariant }}</span>
+                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px">
+                  <sc-for list="{{ m.variants }}" as="vo" hint-placeholder-count="3">
+                    <button type="button" onClick="{{ vo.select }}" style="{{ vo.style }}">
+                      <span onClick="{{ vo.zoom }}" style="{{ vo.imgStyle }}"></span>
+                      <span style="font-size:12px;font-weight:600;line-height:1.3;text-wrap:pretty">{{ vo.name }}</span>
+                    </button>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-if>
+            </div>
+          </sc-for>
+        </div>
+
+      </sc-if>
+
+      <sc-if value="{{ notMug }}" hint-placeholder-val="{{ true }}">
       <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px" id="format-grid">
         <sc-for list="{{ formatOptions }}" as="f" hint-placeholder-count="4">
           <button type="button" class="opt-btn" onClick="{{ f.select }}" style="{{ f.style }}">
@@ -310,6 +416,7 @@
           </button>
         </sc-for>
       </div>
+      </sc-if>
 
       <sc-if value="{{ isCal }}" hint-placeholder-val="{{ false }}">
         <p style="margin:0;font-size:13px;line-height:1.5;color:#6b8589">{{ calNoteA }} <span id="cal-note-b">{{ calNoteB }}</span></p>
@@ -329,9 +436,25 @@
       </sc-if>
     </section>
 
+    <sc-if value="{{ isMug }}" hint-placeholder-val="{{ false }}">
+    <section style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+        <div style="display:flex;align-items:baseline;gap:10px">
+          <span style="width:26px;height:26px;border-radius:999px;background:#e6f7f7;color:#0a6b6b;display:grid;place-items:center;font-size:14px;font-weight:700;flex:none">3</span>
+          <h2 style="font-family:var(--font-heading);font-size:24px;margin:0;color:#15262a">{{ t.mugQty }}</h2>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button type="button" aria-label="{{ t.less }}" onClick="{{ mugDec }}" style="width:44px;height:44px;border-radius:999px;border:1px solid #c9eded;background:#fff;color:#0a6b6b;font-size:20px;cursor:pointer;line-height:1" style-hover="background:#e6f7f7">−</button>
+          <span style="min-width:26px;text-align:center;font-size:16px;font-weight:700">{{ mugQty }}</span>
+          <button type="button" aria-label="{{ t.more }}" onClick="{{ mugInc }}" style="width:44px;height:44px;border-radius:999px;border:1px solid #c9eded;background:#fff;color:#0a6b6b;font-size:20px;cursor:pointer;line-height:1" style-hover="background:#e6f7f7">+</button>
+        </div>
+      </div>
+    </section>
+    </sc-if>
+
     <section style="display:flex;flex-direction:column;gap:14px">
       <div style="display:flex;align-items:baseline;gap:10px">
-        <span style="width:26px;height:26px;border-radius:999px;background:#e6f7f7;color:#0a6b6b;display:grid;place-items:center;font-size:14px;font-weight:700;flex:none">3</span>
+        <span style="width:26px;height:26px;border-radius:999px;background:#e6f7f7;color:#0a6b6b;display:grid;place-items:center;font-size:14px;font-weight:700;flex:none">{{ dataStep }}</span>
         <h2 style="font-family:var(--font-heading);font-size:24px;margin:0;color:#15262a">{{ t.step4 }}</h2>
       </div>
 
@@ -364,7 +487,7 @@
 
     <section style="border:1px solid #c9eded;border-radius:24px;background:#f7fdfd;padding:22px;display:flex;flex-direction:column;gap:14px">
       <div style="display:flex;justify-content:space-between;gap:12px;font-size:15px;color:#3d5a5e">
-        <span>{{ copiesLabel }} · {{ formatLabel }} cm · {{ unitLabel }}</span>
+        <span>{{ copiesLabel }} · {{ formatLabel }} · {{ unitLabel }}</span>
         <span style="font-weight:600;color:#15262a;white-space:nowrap">{{ printsTotal }}</span>
       </div>
       <sc-if value="{{ bulkActive }}" hint-placeholder-val="{{ false }}">
@@ -381,7 +504,7 @@
         <span style="font-family:var(--font-heading);font-size:20px;color:#15262a">{{ t.total }}</span>
         <span style="font-family:var(--font-heading);font-size:30px;color:#0a6b6b;white-space:nowrap">{{ total }}</span>
       </div>
-      <p style="margin:0;font-size:13px;line-height:1.5;color:#6b8589;text-align:center">{{ t.leadTime }}</p>
+      <p style="margin:0;font-size:13px;line-height:1.5;color:#6b8589;text-align:center">{{ leadTimeLabel }}</p>
       <button type="button" onClick="{{ submit }}" disabled="{{ cannotSubmit }}" style="{{ submitStyle }}">{{ submitLabel }}</button>
     </section>
 
@@ -447,6 +570,32 @@ const CAL_FORMATS = [
   { id: "k30x40", label: "30 × 40", price: 600 }
 ];
 const CAL_MIN_DPI = 250;
+/* mugs: every chosen photo goes on the same mug; quantity = number of mugs */
+const MUGS = [
+  { id: "bela", name: "Bela", price: 800 },
+  { id: "drska", name: "Bela sa drškom u boji", price: 900, variants: [
+    { id: "crna", name: "Crna", color: "#232323" }, { id: "crvena", name: "Crvena", color: "#d4363a" }, { id: "narandzasta", name: "Narandžasta", color: "#f08a24" }, { id: "zuta", name: "Žuta", color: "#f2c618" },
+    { id: "zelena", name: "Zelena", color: "#6cbf3c" }, { id: "plava", name: "Plava", color: "#2f6fd6" }, { id: "zlatna", name: "Zlatna", color: "#c9a13b" }, { id: "roze", name: "Roze", color: "#f08fb7" }, { id: "siva", name: "Siva", color: "#9a9a9a" }
+  ] },
+  { id: "srce", name: "Bela sa srce drškom u boji", price: 900, variants: [
+    { id: "crvena", name: "Crvena", color: "#d4363a" }, { id: "roze", name: "Roze", color: "#f08fb7" }, { id: "plava", name: "Plava", color: "#2f6fd6" }
+  ] },
+  { id: "magicna", name: "Crna magična sa šljokicama", price: 1000 },
+  { id: "srebrna", name: "Srebrna", price: 1000 },
+  { id: "roze", name: "Roze sa šljokicama", price: 1000 },
+  { id: "ljubicasta", name: "Ljubičasta sjajna", price: 1000 },
+  { id: "zelena", name: "Zelena sjajna", price: 1000 },
+  { id: "metalik", name: "Bela Metalik", price: 1000 },
+  { id: "natpis", name: "Bela sa natpisom unutra", price: 800, variants: [
+    { id: "happy-bday", name: "Happy B-day", color: "#e6f7f7" }, { id: "happy-mothers-day", name: "Happy Mothers Day", color: "#e6f7f7" }
+  ] }
+];
+const MUG_IMG = "./mug-";
+const FRAMES = [
+  { id: "krug", sr: "Fotografija u krugu", en: "Photo in a circle" },
+  { id: "kvadrat", sr: "Fotografija u kvadratu", en: "Photo in a square" },
+  { id: "pravougaonik", sr: "Fotografija u pravougaoniku", en: "Photo in a rectangle" }
+];
 const DELIVERY = [{ id: "radnja", fee: 0 }, { id: "dostava", fee: 0 }];
 
 const STR = {
@@ -462,7 +611,7 @@ const STR = {
     fName: "Ime i prezime", phName: "Marija Petrović", fPhone: "Telefon",
     fAddress: "Adresa za dostavu", phAddress: "Ulica i broj, grad, poštanski broj",
     fNote: "Napomena", phNote: "",
-    srcDevice: "Računar ili telefon", close: "Zatvori", pickSource: "Odakle dodajete fotografije?", leadTime: "Rok izrade je 1 dan", calCrop: "Ukoliko fotografija nije istog oblika kao odabrani kalendar, deo fotografije može biti isečen.", qOk: "Dobra rezolucija za {f} cm", qLow: "Niža rezolucija za {f} cm — štampa može biti manje oštra", homeTitle: "Izaberite svoj proizvod", cardFoto: "Fotografije", cardFotoSub: "Sačuvaj svoje omiljene uspomene", cardCal: "Kalendari", cardCalSub: "Tvoje uspomene tokom cele godine", back: "Nazad", step1Cal: "Izaberite fotografije za kalendar", step2Cal: "Izaberite format kalendara", calNote: "Jedna fotografija je jedan kalendar. Broj komada birate uz svaku fotografiju.", upProgress: "Šaljemo fotografije:", upWarn: "Ne zatvarajte aplikaciju i ne napuštajte stranicu dok se slanje ne završi.", sending: "Slanje u toku…", uploadingTitle: "Šaljemo fotografije", uploadingHint: "Ne zatvarajte stranicu dok se slanje ne završi.", uploadFailTitle: "Slanje nije uspelo", uploadFailBody: "Fotografije nisu sačuvane. Pokušajte ponovo ili nas pozovite — porudžbinu primamo i telefonom.", retry: "Pokušaj ponovo", callUs: "Pozovite nas", promoTitle: "Za porudžbine od 100 ili više fotografija|važe snižene cene:", bulkBadge: "Akcijska cena za 100+ fotografija je primenjena", ticker: "AKCIJA • Poruči 100+ fotografija i ostvari popust •",
+    srcDevice: "Računar ili telefon", close: "Zatvori", pickSource: "Odakle dodajete fotografije?", leadTime: "Rok izrade je 1 dan", leadTimeMug: "Rok izrade je 2 dana", cardMug: "Šolje", cardMugSub: "Šolja sa vašim fotografijama i tekstom, u deset modela.", step1Mug: "Odaberite motiv za svoju šolju", step2Mug: "Izaberite model šolje", mugText: "Tekst ili posveta koju želite na šolji (opciono)", mugTextPh: "npr. Za najbolju mamu", mugQty: "Količina", mugFrame: "Izaberite oblik fotografije na šolji", mugModeQ: "Šta želite na šolji?", mugModePhoto: "Fotografije na šolji", mugModeText: "Samo tekst", mugTextFree: "Tekst ili posveta koju želite na šolji (opciono, besplatno)", mugTextReq: "Tekst ili posveta koju želite na šolji", pickVariant: "Izaberite varijantu", mugNote: "Sve izabrane fotografije štampaju se na jednu šolju.", calCrop: "Ukoliko fotografija nije istog oblika kao odabrani kalendar, deo fotografije može biti isečen.", qOk: "Dobra rezolucija za {f} cm", qLow: "Niža rezolucija za {f} cm — štampa može biti manje oštra", homeTitle: "Izaberite svoj proizvod", cardFoto: "Fotografije", cardFotoSub: "Sačuvaj svoje omiljene uspomene", cardCal: "Kalendari", cardCalSub: "Tvoje uspomene tokom cele godine", back: "Nazad", step1Cal: "Izaberite fotografije za kalendar", step2Cal: "Izaberite format kalendara", calNote: "Jedna fotografija je jedan kalendar. Broj komada birate uz svaku fotografiju.", upProgress: "Šaljemo fotografije:", upWarn: "Ne zatvarajte aplikaciju i ne napuštajte stranicu dok se slanje ne završi.", sending: "Slanje u toku…", uploadingTitle: "Šaljemo fotografije", uploadingHint: "Ne zatvarajte stranicu dok se slanje ne završi.", uploadFailTitle: "Slanje nije uspelo", uploadFailBody: "Fotografije nisu sačuvane. Pokušajte ponovo ili nas pozovite — porudžbinu primamo i telefonom.", retry: "Pokušaj ponovo", callUs: "Pozovite nas", promoTitle: "Za porudžbine od 100 ili više fotografija|važe snižene cene:", bulkBadge: "Akcijska cena za 100+ fotografija je primenjena", ticker: "AKCIJA • Poruči 100+ fotografija i ostvari popust •",
     socialHelp: "Otvorite naš profil, sačuvajte željene fotografije na svoj telefon ili računar, a zatim ih dodajte preko opcije „Računar ili telefon“.",
     socialOpenIg: "Otvori Instagram", socialOpenFb: "Otvori Facebook",
     pickupNote: "Za Novi Sad i okolinu do 40 km — porudžbinu možete preuzeti lično.",
@@ -484,7 +633,7 @@ const STR = {
     fName: "Full name", phName: "Maria Petrovic", fPhone: "Phone",
     fAddress: "Delivery address", phAddress: "Street and number, city, postal code",
     fNote: "Note", phNote: "",
-    srcDevice: "Computer or phone", close: "Close", pickSource: "Where are the photos from?", leadTime: "Ready in 1 day", calCrop: "If the photo is not the same shape as the chosen calendar, part of it may be cropped.", qOk: "Good resolution for {f} cm", qLow: "Lower resolution for {f} cm — the print may be less sharp", homeTitle: "What would you like to order?", cardFoto: "Photos", cardFotoSub: "Photo prints in six formats, from 9 × 13 to 30 × 40 cm.", cardCal: "Calendars", cardCalSub: "A wall calendar with your photo, in three formats.", back: "Back", step1Cal: "Choose photos for your calendar", step2Cal: "Choose a calendar format", calNote: "One photo makes one calendar. Choose the number of copies next to each photo.", upProgress: "Uploading photos:", upWarn: "Please do not close the app or leave this page until the upload finishes.", sending: "Sending…", uploadingTitle: "Uploading photos", uploadingHint: "Please keep this page open until the upload finishes.", uploadFailTitle: "Upload failed", uploadFailBody: "Your photos were not saved. Please try again or call us — we take orders by phone too.", retry: "Try again", callUs: "Call us", promoTitle: "Orders of 100 photos or more|get reduced prices:", bulkBadge: "Bulk price for 100+ photos applied", ticker: "SALE • Order 100+ photos and get a discount •",
+    srcDevice: "Computer or phone", close: "Close", pickSource: "Where are the photos from?", leadTime: "Ready in 1 day", leadTimeMug: "Ready in 2 days", cardMug: "Mugs", cardMugSub: "A mug with your photos and text, in ten models.", step1Mug: "Choose a design for your mug", step2Mug: "Choose a mug model", mugText: "Text or dedication for the mug (optional)", mugTextPh: "e.g. For the best mum", mugQty: "Quantity", mugFrame: "Choose the photo shape on the mug", mugModeQ: "What would you like on the mug?", mugModePhoto: "Photos on the mug", mugModeText: "Text only", mugTextFree: "Text or dedication for the mug (optional, free)", mugTextReq: "Text or dedication for the mug", pickVariant: "Choose a variant", mugNote: "All chosen photos are printed on one mug.", calCrop: "If the photo is not the same shape as the chosen calendar, part of it may be cropped.", qOk: "Good resolution for {f} cm", qLow: "Lower resolution for {f} cm — the print may be less sharp", homeTitle: "What would you like to order?", cardFoto: "Photos", cardFotoSub: "Photo prints in six formats, from 9 × 13 to 30 × 40 cm.", cardCal: "Calendars", cardCalSub: "A wall calendar with your photo, in three formats.", back: "Back", step1Cal: "Choose photos for your calendar", step2Cal: "Choose a calendar format", calNote: "One photo makes one calendar. Choose the number of copies next to each photo.", upProgress: "Uploading photos:", upWarn: "Please do not close the app or leave this page until the upload finishes.", sending: "Sending…", uploadingTitle: "Uploading photos", uploadingHint: "Please keep this page open until the upload finishes.", uploadFailTitle: "Upload failed", uploadFailBody: "Your photos were not saved. Please try again or call us — we take orders by phone too.", retry: "Try again", callUs: "Call us", promoTitle: "Orders of 100 photos or more|get reduced prices:", bulkBadge: "Bulk price for 100+ photos applied", ticker: "SALE • Order 100+ photos and get a discount •",
     socialHelp: "Open our profile, save the photos you want to your phone or computer, then add them with the “Computer or phone” option.",
     socialOpenIg: "Open Instagram", socialOpenFb: "Open Facebook",
     pickupNote: "For Novi Sad and up to 40 km around — you can collect your order in person.",
@@ -498,7 +647,7 @@ const STR = {
 
 class Component extends DCLogic {
   state = {
-    photos: [], format: "10x15", delivery: "radnja", product: null,
+    photos: [], format: "10x15", delivery: "radnja", product: null, mug: "bela", mugQty: 1, mugText: "", mugFrame: "krug", mugVar: "", mugMode: "",
     name: "", phone: "", address: "", note: "", sent: null, lang: "sr", uploadError: "", uploading: null, upErr: "", converting: null
   };
 
@@ -656,6 +805,11 @@ class Component extends DCLogic {
       const y = el.getBoundingClientRect().top + window.pageYOffset - 24;
       window.scrollTo({ top: y, behavior: "smooth" });
     });
+  }
+
+  frameName(id) {
+    const f = FRAMES.find(x => x.id === id) || FRAMES[0];
+    return f.sr;
   }
 
   isIOS() {
@@ -881,16 +1035,21 @@ class Component extends DCLogic {
     const t = STR[s.lang] || STR.sr;
     const cal = s.product === "kalendar";
     const LIST = cal ? CAL_FORMATS : FORMATS;
-    const fmt = LIST.find(f => f.id === s.format) || LIST[0];
-    const fmtName = (cal ? "Kalendar " : "") + fmt.label + " cm";
+    const mugSel = s.product === "solja";
+    const mug = MUGS.find(m => m.id === s.mug) || MUGS[0];
+    const fmt = mugSel ? { id: mug.id, label: mug.name, price: mug.price } : (LIST.find(f => f.id === s.format) || LIST[0]);
+    const mugVar = mug.variants ? mug.variants.find(x => x.id === s.mugVar) : null;
+    const fmtName = mugSel ? "Šolja — " + mug.name + (mugVar ? " (" + mugVar.name + ")" : "") : (cal ? "Kalendar " : "") + fmt.label + " cm";
     const del = DELIVERY.find(d => d.id === s.delivery) || DELIVERY[0];
-    const copies = s.photos.reduce((a, p) => a + p.qty, 0);
-    const bulk = copies >= BULK_FROM && fmt.bulk;
+    const copies = mugSel ? s.mugQty : s.photos.reduce((a, p) => a + p.qty, 0);
+    const bulk = !mugSel && copies >= BULK_FROM && fmt.bulk;
     const unit = bulk ? fmt.bulk : fmt.price;
     const prints = copies * unit;
     const total = prints + del.fee;
     const needsAddress = s.delivery === "dostava";
-    const ready = s.photos.length > 0 && s.name.trim() && s.phone.trim() && (!needsAddress || s.address.trim());
+    const textMode = mugSel && s.mugMode === "tekst";
+    const hasContent = mugSel && !s.mugMode ? false : textMode ? !!s.mugText.trim() : s.photos.length > 0;
+    const ready = (!mugSel || !mug.variants || !!mugVar) && hasContent && s.name.trim() && s.phone.trim() && (!needsAddress || s.address.trim());
     const delLabel = del.id === "dostava" ? t.ship : t.pickup;
 
     return {
@@ -903,14 +1062,70 @@ class Component extends DCLogic {
       isCal: cal,
       calNoteA: t.calNote.split(". ")[0] + ".",
       calNoteB: t.calNote.split(". ").slice(1).join(". "),
-      notCal: !cal,
-      step1Label: cal ? t.step1Cal : t.step1,
-      step2Label: cal ? t.step2Cal : t.step2,
+      notCal: s.product === "foto",
+      isMug: mugSel,
+      notMug: !mugSel,
+      mugOptions: MUGS.map(m => ({
+        name: m.name,
+        priceLabel: this.dinars(m.price),
+        style: this.pill(m.id === mug.id, "flex-direction:row;align-items:center;gap:14px;padding:10px 18px 10px 10px;text-align:left"),
+        imgStyle: "display:block;flex:none;width:64px;height:64px;border-radius:14px;background:#fff center/cover no-repeat url('" + MUG_IMG + m.id + ".png');cursor:zoom-in;box-shadow:inset 0 0 0 1px #e2efef",
+        zoom: e => { e.stopPropagation(); this.setState({ mug: m.id, mugVar: m.id === mug.id ? s.mugVar : "", zoom: { url: MUG_IMG + m.id + ".png", name: m.name } }); },
+        select: () => this.setState({ mug: m.id, mugVar: m.id === mug.id ? s.mugVar : "" }),
+        showVariants: m.id === mug.id && !!m.variants,
+        missing: m.id === mug.id && !!m.variants && !mugVar,
+        variants: m.id === mug.id && m.variants ? m.variants.map(x => ({
+          name: x.name,
+          style: this.pill(x.id === s.mugVar, "flex-direction:column;align-items:center;gap:6px;padding:8px;text-align:center"),
+          imgStyle: "display:block;width:56px;height:56px;border-radius:12px;background:#fff center/cover no-repeat url('" + MUG_IMG + m.id + "-" + x.id + ".png');cursor:zoom-in;box-shadow:inset 0 0 0 1px #e2efef",
+          zoom: e => { e.stopPropagation(); this.setState({ mugVar: x.id, zoom: { url: MUG_IMG + m.id + "-" + x.id + ".png", name: m.name + " — " + x.name } }); },
+          select: () => this.setState({ mugVar: x.id })
+        })) : []
+      })),
+      mugQty: s.mugQty,
+      mugPhotoMode: s.mugMode === "foto",
+      showUploadArea: !mugSel || s.mugMode === "foto",
+      mugModeChosen: !!s.mugMode,
+      mugTextLabel: textMode ? t.mugTextReq : t.mugTextFree,
+      mugModeOptions: [["foto", t.mugModePhoto], ["tekst", t.mugModeText]].map(([id, label]) => ({
+        label,
+        style: this.pill(s.mugMode === id, "flex:1;flex-direction:row;justify-content:center;align-items:center;text-align:center;border-radius:999px;font-size:15px"),
+        select: () => this.setState({ mugMode: id })
+      })),
+      dataStep: mugSel ? "4" : "3",
+      zoomOpen: !!s.zoom,
+      zoomUrl: s.zoom ? s.zoom.url : "",
+      zoomName: s.zoom ? s.zoom.name : "",
+      closeZoom: () => this.setState({ zoom: null }),
+      keepZoom: e => e.stopPropagation(),
+      hasVariants: mugSel && !!mug.variants,
+      variantTitle: mug.name,
+      variantOptions: (mug.variants || []).map(x => ({
+        name: x.name,
+        style: this.pill(x.id === s.mugVar, "flex-direction:column;align-items:center;gap:6px;padding:8px;text-align:center"),
+        imgStyle: "display:block;width:56px;height:56px;border-radius:12px;background:" + x.color + " center/cover no-repeat url('" + MUG_IMG + mug.id + "-" + x.id + ".jpg')",
+        select: () => this.setState({ mugVar: x.id })
+      })),
+      variantMissing: mugSel && !!mug.variants && !mugVar,
+      frameOptions: FRAMES.map(fr => ({
+        label: s.lang === "en" ? fr.en : fr.sr,
+        style: this.pill(s.mugFrame === fr.id, "flex-direction:row;padding:10px 16px;border-radius:999px;font-size:14px"),
+        select: () => this.setState({ mugFrame: fr.id })
+      })),
+      mugInc: () => this.setState(st => ({ mugQty: st.mugQty + 1 })),
+      mugDec: () => this.setState(st => ({ mugQty: Math.max(1, st.mugQty - 1) })),
+      mugText: s.mugText,
+      onMugText: e => this.setState({ mugText: e.target.value }),
+      leadTimeLabel: mugSel ? t.leadTimeMug : t.leadTime,
+      pickMug: () => this.setState({ product: "solja" }, () => this.toStep1()),
+      step1Label: mugSel ? t.step1Mug.replace(/ za svoju šolju$| for your mug$/, "") : cal ? t.step1Cal : t.step1,
+      step1Tail: mugSel ? (s.lang === "en" ? " for your mug" : " za svoju šolju") : "",
+      step2Label: mugSel ? t.step2Mug : cal ? t.step2Cal : t.step2,
       pickFoto: () => this.setState({ product: "foto", format: "10x15" }),
       pickCal: () => this.setState({ product: "kalendar", format: CAL_FORMATS[0].id }, () => this.toStep1()),
       goHome: () => this.setState({ product: null }),
       sent: !!s.sent,
-      reset: () => this.setState({ photos: [], name: "", phone: "", address: "", note: "", sent: null, product: null }),
+      reset: () => this.setState({ photos: [], name: "", phone: "", address: "", note: "", sent: null, product: null, mugQty: 1, mugText: "" }),
 
       cartCount: copies,
       readyNote: s.readyNote || "",
@@ -945,6 +1160,13 @@ class Component extends DCLogic {
         return {
         key: p.key, name: p.name, size: p.size, url: p.url, qty: p.qty,
         qOk: !!(q && q.ok), qLow: !!(q && !q.ok), qText: q ? q.text : "",
+        showQty: !mugSel,
+        showFrame: mugSel,
+        frames: FRAMES.map(fr => ({
+          label: s.lang === "en" ? fr.en : fr.sr,
+          style: this.pill((p.frame || "okrugli") === fr.id, "padding:8px 14px;border-radius:999px;font-size:13px;flex-direction:row"),
+          select: () => this.setState(st => ({ photos: st.photos.map(x => x.key === p.key ? Object.assign({}, x, { frame: fr.id }) : x) }))
+        })),
         thumbStyle: "width:58px;height:58px;border-radius:12px;background:#e6f7f7 center/cover no-repeat url('" + p.url + "');flex:none",
         inc: () => this.bump(p.key, 1),
         dec: () => this.bump(p.key, -1),
@@ -972,7 +1194,7 @@ class Component extends DCLogic {
       onNote: e => this.setState({ note: e.target.value }),
       needsAddress,
 
-      formatLabel: fmt.label,
+      formatLabel: mugSel ? mug.name + (mugVar ? " (" + mugVar.name.toLowerCase() + ")" : "") : fmt.label + " cm",
       copiesLabel: copies + " " + t.pcs,
       unitLabel: this.dinars(unit) + " " + t.each,
       printsTotal: this.dinars(prints),
@@ -1003,7 +1225,11 @@ class Component extends DCLogic {
           "Format: " + fmtName,
           "Cena po komadu: " + this.dinars(unit) + (bulk ? " (akcijska cena od " + BULK_FROM + " kom)" : ""), "",
           "Fotografije:",
-          ...s.photos.map(p => "· " + p.name + " — " + p.qty + " kom"),
+          ...(mugSel
+            ? s.photos.map(p => "· " + p.name)
+            : s.photos.map(p => "· " + p.name + " — " + p.qty + " kom")),
+          mugSel ? "Broj šolja: " + s.mugQty : null,
+          mugSel ? "Tekst na šolji: " + (s.mugText.trim() || "—") : null,
           "",
           "Ukupno: " + this.dinars(total),
           s.note.trim() ? "Napomena: " + s.note.trim() : null
@@ -1022,7 +1248,9 @@ class Component extends DCLogic {
             Adresa: needsAddress ? s.address.trim() : "—",
             Format: fmtName,
             CenaPoKomadu: this.dinars(unit) + (bulk ? " (akcija 100+)" : ""),
-            Fotografije: s.photos.map(p => p.name + " — " + p.qty + " kom").join("\n"),
+            Fotografije: mugSel
+              ? s.photos.map(p => p.name).join("\n") + "\nBroj šolja: " + s.mugQty + "\nTekst na šolji: " + (s.mugText.trim() || "—")
+              : s.photos.map(p => p.name + " — " + p.qty + " kom").join("\n"),
             Ukupno: this.dinars(total),
             Napomena: s.note.trim() || "—",
             Detalji: lines.join("\n")
@@ -1037,12 +1265,18 @@ class Component extends DCLogic {
           full_name: s.name.trim(),
           phone: s.phone.trim(),
           address: needsAddress ? s.address.trim() : "",
-          note: s.note.trim(),
+          note: mugSel
+            ? [s.note.trim(), textMode ? "Bez fotografije — samo tekst" : null, "Tekst na šolji: " + (s.mugText.trim() || "—")].filter(Boolean).join("\n")
+            : s.note.trim(),
           photo_format: fmtName,
           photo_quantity: copies,
           total_price: total,
-          photo_count: s.photos.length
-        }, s.photos);
+          photo_count: textMode ? 0 : s.photos.length
+        }, textMode ? [] : mugSel
+          /* each photo goes on every mug: copies = number of mugs; the frame
+             travels in the file name so the admin sees it per photo */
+          ? s.photos.map(p => Object.assign({}, p, { qty: s.mugQty, name: p.name }))
+          : s.photos);
       }
     };
   }
